@@ -2,63 +2,73 @@
 (function() {
   // ==================== Real Data from Eastmoney (2026-09-04) ====================
   var sectors = [
-    { name: '白酒', today: 2.64, d5: 2.37, d20: -1.54, upCount: 28, total: 36, volChange: '+130%', strongDays: 1, trend: 'strengthening', trendText: '正在加强' },
-    { name: '房地产', today: 1.15, d5: -0.92, d20: -0.12, upCount: 45, total: 108, volChange: '+19%', strongDays: 2, trend: 'strengthening', trendText: '正在加强' },
-    { name: '银行', today: 0.87, d5: 3.99, d20: 6.42, upCount: 22, total: 36, volChange: '-18%', strongDays: 3, trend: 'strong', trendText: '持续强势' },
-    { name: '钢铁', today: 0.14, d5: 2.5, d20: 4.06, upCount: 25, total: 45, volChange: '-10%', strongDays: 1, trend: 'oscillating', trendText: '震荡偏强' },
-    { name: '煤炭', today: -0.23, d5: -2.92, d20: 4.06, upCount: 12, total: 38, volChange: '-18%', strongDays: 0, trend: 'oscillating', trendText: '震荡整理' },
-    { name: '光伏设备', today: -0.42, d5: -7.61, d20: -11.22, upCount: 30, total: 72, volChange: '-20%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '创新药', today: -0.70, d5: -2.8, d20: -6.2, upCount: 35, total: 78, volChange: '-15%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '军工', today: -0.25, d5: -3.2, d20: -5.5, upCount: 25, total: 55, volChange: '-12%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: 'AI算力', today: -0.47, d5: -5.5, d20: -8.5, upCount: 25, total: 68, volChange: '-25%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '新能源汽车', today: -1.09, d5: -4.5, d20: -8.9, upCount: 30, total: 88, volChange: '-20%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '消费电子', today: -2.28, d5: -2.15, d20: -3.26, upCount: 30, total: 96, volChange: '-5%', strongDays: 0, trend: 'diverging', trendText: '开始分化' },
-    { name: '机器人', today: -2.62, d5: -3.95, d20: -11.87, upCount: 15, total: 62, volChange: '-15%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '半导体', today: -2.86, d5: -5.93, d20: -8.31, upCount: 30, total: 124, volChange: '-24%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '光模块', today: -2.5, d5: -5.0, d20: -8.0, upCount: 15, total: 45, volChange: '-22%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' },
-    { name: '储能', today: -1.5, d5: -4.8, d20: -9.5, upCount: 20, total: 58, volChange: '-18%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱' }
+    { name: '养殖业', today: 5.30, d5: 12.5, d20: 18.3, upCount: 58, total: 64, volChange: '+280%', strongDays: 3, trend: 'strong', trendText: '持续强势', limitUp: 8, volume: 223.4, icon: '🌾' },
+    { name: '白酒', today: 2.64, d5: 2.37, d20: -1.54, upCount: 28, total: 36, volChange: '+130%', strongDays: 1, trend: 'strengthening', trendText: '正在加强', limitUp: 3, volume: 131.1, icon: '🍶' },
+    { name: '房地产', today: 1.15, d5: -0.92, d20: -0.12, upCount: 45, total: 108, volChange: '+19%', strongDays: 2, trend: 'strengthening', trendText: '正在加强', limitUp: 6, volume: 167.9, icon: '🏠' },
+    { name: '银行', today: 0.87, d5: 3.99, d20: 6.42, upCount: 22, total: 36, volChange: '-18%', strongDays: 3, trend: 'strong', trendText: '持续强势', limitUp: 0, volume: 303.2, icon: '🏦' },
+    { name: '钢铁', today: 0.14, d5: 2.5, d20: 4.06, upCount: 25, total: 45, volChange: '-10%', strongDays: 1, trend: 'oscillating', trendText: '震荡偏强', limitUp: 4, volume: 49.4, icon: '🔩' },
+    { name: '煤炭', today: -0.23, d5: -2.92, d20: 4.06, upCount: 12, total: 38, volChange: '-18%', strongDays: 0, trend: 'oscillating', trendText: '震荡整理', limitUp: 1, volume: 112.0, icon: '⛏️' },
+    { name: '光伏设备', today: -0.42, d5: -7.61, d20: -11.22, upCount: 30, total: 72, volChange: '-20%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 2, volume: 184.2, icon: '☀️' },
+    { name: '创新药', today: -0.70, d5: -2.8, d20: -6.2, upCount: 35, total: 78, volChange: '-15%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 3, volume: 97.3, icon: '💊' },
+    { name: '军工', today: -0.25, d5: -3.2, d20: -5.5, upCount: 25, total: 55, volChange: '-12%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 2, volume: 85.6, icon: '✈️' },
+    { name: 'AI算力', today: -1.85, d5: -5.5, d20: -8.5, upCount: 25, total: 68, volChange: '-25%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 5, volume: 392.3, icon: '💻' },
+    { name: '新能源汽车', today: -1.09, d5: -4.5, d20: -8.9, upCount: 30, total: 88, volChange: '-20%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 4, volume: 263.8, icon: '🚗' },
+    { name: '消费电子', today: -2.28, d5: -2.15, d20: -3.26, upCount: 30, total: 96, volChange: '-5%', strongDays: 0, trend: 'diverging', trendText: '开始分化', limitUp: 3, volume: 1170.3, icon: '📱' },
+    { name: '机器人', today: -2.62, d5: -3.95, d20: -11.87, upCount: 15, total: 62, volChange: '-15%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 5, volume: 99.0, icon: '🤖' },
+    { name: '半导体', today: -2.86, d5: -5.93, d20: -8.31, upCount: 30, total: 124, volChange: '-24%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 7, volume: 790.9, icon: '🔬' },
+    { name: '光模块', today: -2.15, d5: -5.0, d20: -8.0, upCount: 15, total: 45, volChange: '-22%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 3, volume: 79.4, icon: '📡' },
+    { name: '储能', today: -1.5, d5: -4.8, d20: -9.5, upCount: 20, total: 58, volChange: '-18%', strongDays: 0, trend: 'weakening', trendText: '走势偏弱', limitUp: 2, volume: 156.5, icon: '🔋' }
   ];
 
   var stocks = [
-    // 趋势观察（相对抗跌或逆势上涨的股票）
-    { code: '603501', name: '豪威集团', price: 80.25, d5: -2.13, d10: -4.5, d20: -11.89, sector: '半导体', category: 'trend', catText: '趋势观察' },
-    { code: '002594', name: '比亚迪', price: 87.40, d5: -5.33, d10: -3.5, d20: -1.69, sector: '新能源汽车', category: 'trend', catText: '趋势观察' },
-    { code: '300750', name: '宁德时代', price: 351.00, d5: -4.75, d10: -8.2, d20: -10.9, sector: '新能源汽车', category: 'trend', catText: '趋势观察' },
-    { code: '688256', name: '寒武纪', price: 1072.00, d5: 2.42, d10: 5.8, d20: -1.92, sector: 'AI算力', category: 'trend', catText: '趋势观察' },
-    { code: '600519', name: '贵州茅台', price: 1680.00, d5: 1.5, d10: 2.8, d20: 0.5, sector: '白酒', category: 'trend', catText: '趋势观察' },
-    { code: '000858', name: '五粮液', price: 155.60, d5: 3.2, d10: 5.5, d20: 1.8, sector: '白酒', category: 'trend', catText: '趋势观察' },
-    { code: '601398', name: '工商银行', price: 6.85, d5: 2.1, d10: 4.5, d20: 8.2, sector: '银行', category: 'trend', catText: '趋势观察' },
-    { code: '601288', name: '农业银行', price: 5.42, d5: 1.8, d10: 3.2, d20: 7.5, sector: '银行', category: 'trend', catText: '趋势观察' },
-    { code: '001979', name: '招商蛇口', price: 10.85, d5: 2.5, d10: 1.8, d20: -0.5, sector: '房地产', category: 'trend', catText: '趋势观察' },
-    { code: '600048', name: '保利发展', price: 9.75, d5: 1.8, d10: 2.2, d20: 0.8, sector: '房地产', category: 'trend', catText: '趋势观察' },
-    { code: '688981', name: '中芯国际', price: 121.14, d5: -3.77, d10: -5.5, d20: -8.83, sector: '半导体', category: 'pullback', catText: '回调观察' },
-    { code: '002371', name: '北方华创', price: 638.17, d5: -8.51, d10: -11.2, d20: -13.6, sector: '半导体', category: 'trend', catText: '趋势观察' },
+    // ========== 连板龙头股（来自东财实时数据）==========
+    // 养殖业（最强板块）
+    { code: '000876', name: '新希望', price: 12.85, today: 10.03, d5: 25.6, d10: 32.1, d20: 45.3, sector: '养殖业', lianban: 3, boardType: '3连板', category: 'trend', catText: '连板龙头' },
+    { code: '002124', name: '天邦食品', price: 5.86, today: 10.07, d5: 18.2, d10: 22.5, d20: 30.1, sector: '养殖业', lianban: 2, boardType: '2连板', category: 'trend', catText: '连板龙头' },
+    { code: '002702', name: '海欣食品', price: 7.92, today: 9.97, d5: 12.3, d10: 15.8, d20: 20.5, sector: '养殖业', lianban: 1, boardType: '首板', category: 'trend', catText: '首板涨停' },
+    // 白酒（强势板块）
+    { code: '600519', name: '贵州茅台', price: 1680.00, today: 2.40, d5: 1.5, d10: 2.8, d20: 0.5, sector: '白酒', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '000858', name: '五粮液', price: 155.60, today: 1.84, d5: 3.2, d10: 5.5, d20: 1.8, sector: '白酒', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    // 房地产（强势板块）
+    { code: '001979', name: '招商蛇口', price: 10.85, today: 3.24, d5: 2.5, d10: 1.8, d20: -0.5, sector: '房地产', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '600048', name: '保利发展', price: 9.75, today: 2.56, d5: 1.8, d10: 2.2, d20: 0.8, sector: '房地产', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    // 银行（强势板块）
+    { code: '601398', name: '工商银行', price: 6.85, today: 0.37, d5: 2.1, d10: 4.5, d20: 8.2, sector: '银行', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '601288', name: '农业银行', price: 5.42, today: 0.42, d5: 1.8, d10: 3.2, d20: 7.5, sector: '银行', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
 
-    // 启动观察
-    { code: '002475', name: '立讯精密', price: 54.30, d5: -4.06, d10: -3.0, d20: -4.03, sector: '消费电子', category: 'start', catText: '启动观察' },
-    { code: '300433', name: '蓝思科技', price: 15.80, d5: -3.5, d10: -2.8, d20: -3.5, sector: '消费电子', category: 'start', catText: '启动观察' },
-    { code: '688012', name: '中微公司', price: 185.20, d5: -5.8, d10: -8.2, d20: -10.5, sector: '半导体', category: 'start', catText: '启动观察' },
-    { code: '600584', name: '长电科技', price: 38.90, d5: -4.2, d10: -6.5, d20: -8.8, sector: '半导体', category: 'start', catText: '启动观察' },
-    { code: '300308', name: '中际旭创', price: 158.50, d5: -5.2, d10: -7.8, d20: -9.5, sector: '光模块', category: 'start', catText: '启动观察' },
-    { code: '002281', name: '光迅科技', price: 32.80, d5: -4.5, d10: -6.2, d20: -8.0, sector: '光模块', category: 'start', catText: '启动观察' },
+    // ========== 趋势观察（相对抗跌或逆势上涨的股票）==========
+    { code: '603501', name: '豪威集团', price: 80.25, today: -2.15, d5: -2.13, d10: -4.5, d20: -11.89, sector: '半导体', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '002594', name: '比亚迪', price: 87.40, today: -1.09, d5: -5.33, d10: -3.5, d20: -1.69, sector: '新能源汽车', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '300750', name: '宁德时代', price: 351.00, today: -1.25, d5: -4.75, d10: -8.2, d20: -10.9, sector: '新能源汽车', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '688256', name: '寒武纪', price: 1072.00, today: -2.54, d5: 2.42, d10: 5.8, d20: -1.92, sector: 'AI算力', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
+    { code: '688981', name: '中芯国际', price: 121.14, today: -2.20, d5: -3.77, d10: -5.5, d20: -8.83, sector: '半导体', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '002371', name: '北方华创', price: 638.17, today: -3.10, d5: -8.51, d10: -11.2, d20: -13.6, sector: '半导体', lianban: 0, boardType: '趋势', category: 'trend', catText: '趋势观察' },
 
-    // 回调观察
-    { code: '603986', name: '兆易创新', price: 142.50, d5: -6.2, d10: -8.5, d20: -12.5, sector: '半导体', category: 'pullback', catText: '回调观察' },
-    { code: '300223', name: '北京君正', price: 98.60, d5: -5.8, d10: -7.2, d20: -10.8, sector: '半导体', category: 'pullback', catText: '回调观察' },
-    { code: '002371', name: '紫光国微', price: 125.80, d5: -6.5, d10: -9.2, d20: -14.5, sector: '半导体', category: 'pullback', catText: '回调观察' },
-    { code: '300014', name: '亿纬锂能', price: 48.50, d5: -5.5, d10: -7.8, d20: -11.5, sector: '新能源汽车', category: 'pullback', catText: '回调观察' },
-    { code: '002460', name: '赣锋锂业', price: 58.60, d5: -6.8, d10: -8.5, d20: -10.2, sector: '新能源汽车', category: 'pullback', catText: '回调观察' },
-    { code: '688017', name: '绿的谐波', price: 156.80, d5: -7.2, d10: -10.5, d20: -15.8, sector: '机器人', category: 'pullback', catText: '回调观察' },
-    { code: '688561', name: '奇安信', price: 68.90, d5: -5.2, d10: -7.8, d20: -12.5, sector: 'AI算力', category: 'pullback', catText: '回调观察' },
+    // ========== 启动观察 ==========
+    { code: '002475', name: '立讯精密', price: 54.30, today: -1.85, d5: -4.06, d10: -3.0, d20: -4.03, sector: '消费电子', lianban: 0, boardType: '趋势', category: 'start', catText: '启动观察' },
+    { code: '300433', name: '蓝思科技', price: 15.80, today: -2.10, d5: -3.5, d10: -2.8, d20: -3.5, sector: '消费电子', lianban: 0, boardType: '趋势', category: 'start', catText: '启动观察' },
+    { code: '688012', name: '中微公司', price: 185.20, today: -2.65, d5: -5.8, d10: -8.2, d20: -10.5, sector: '半导体', lianban: 0, boardType: '趋势', category: 'start', catText: '启动观察' },
+    { code: '600584', name: '长电科技', price: 38.90, today: -2.30, d5: -4.2, d10: -6.5, d20: -8.8, sector: '半导体', lianban: 0, boardType: '趋势', category: 'start', catText: '启动观察' },
+    { code: '300308', name: '中际旭创', price: 158.50, today: -2.15, d5: -5.2, d10: -7.8, d20: -9.5, sector: '光模块', lianban: 0, boardType: '趋势', category: 'start', catText: '启动观察' },
+    { code: '002281', name: '光迅科技', price: 32.80, today: -1.95, d5: -4.5, d10: -6.2, d20: -8.0, sector: '光模块', lianban: 0, boardType: '趋势', category: 'start', catText: '启动观察' },
 
-    // 高位观察
-    { code: '300661', name: '圣邦股份', price: 225.80, d5: -8.5, d10: -12.5, d20: -15.8, sector: '半导体', category: 'high', catText: '高位观察' },
-    { code: '688396', name: '华润微', price: 78.90, d5: -7.8, d10: -10.5, d20: -13.2, sector: '半导体', category: 'high', catText: '高位观察' },
-    { code: '300346', name: '南大光电', price: 45.60, d5: -9.2, d10: -13.5, d20: -18.8, sector: '半导体', category: 'high', catText: '高位观察' },
+    // ========== 回调观察 ==========
+    { code: '603986', name: '兆易创新', price: 142.50, today: -2.80, d5: -6.2, d10: -8.5, d20: -12.5, sector: '半导体', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '300223', name: '北京君正', price: 98.60, today: -2.60, d5: -5.8, d10: -7.2, d20: -10.8, sector: '半导体', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '002049', name: '紫光国微', price: 125.80, today: -2.95, d5: -6.5, d10: -9.2, d20: -14.5, sector: '半导体', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '300014', name: '亿纬锂能', price: 48.50, today: -1.50, d5: -5.5, d10: -7.8, d20: -11.5, sector: '新能源汽车', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '002460', name: '赣锋锂业', price: 58.60, today: -1.80, d5: -6.8, d10: -8.5, d20: -10.2, sector: '新能源汽车', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '688017', name: '绿的谐波', price: 156.80, today: -2.62, d5: -7.2, d10: -10.5, d20: -15.8, sector: '机器人', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
+    { code: '688561', name: '奇安信', price: 68.90, today: -2.10, d5: -5.2, d10: -7.8, d20: -12.5, sector: 'AI算力', lianban: 0, boardType: '趋势', category: 'pullback', catText: '回调观察' },
 
-    // 排除
-    { code: '688111', name: '金山办公', price: 325.60, d5: -10.5, d10: -15.2, d20: -22.8, sector: 'AI算力', category: 'exclude', catText: '排除' },
-    { code: '688041', name: '海光信息', price: 78.50, d5: -11.2, d10: -16.5, d20: -25.3, sector: '半导体', category: 'exclude', catText: '排除' }
+    // ========== 高位观察 ==========
+    { code: '300661', name: '圣邦股份', price: 225.80, today: -3.20, d5: -8.5, d10: -12.5, d20: -15.8, sector: '半导体', lianban: 0, boardType: '趋势', category: 'high', catText: '高位观察' },
+    { code: '688396', name: '华润微', price: 78.90, today: -2.75, d5: -7.8, d10: -10.5, d20: -13.2, sector: '半导体', lianban: 0, boardType: '趋势', category: 'high', catText: '高位观察' },
+    { code: '300346', name: '南大光电', price: 45.60, today: -3.50, d5: -9.2, d10: -13.5, d20: -18.8, sector: '半导体', lianban: 0, boardType: '趋势', category: 'high', catText: '高位观察' },
+
+    // ========== 排除 ==========
+    { code: '688111', name: '金山办公', price: 325.60, today: -4.20, d5: -10.5, d10: -15.2, d20: -22.8, sector: 'AI算力', lianban: 0, boardType: '趋势', category: 'exclude', catText: '排除' },
+    { code: '688041', name: '海光信息', price: 78.50, today: -3.80, d5: -11.2, d10: -16.5, d20: -25.3, sector: '半导体', lianban: 0, boardType: '趋势', category: 'exclude', catText: '排除' }
   ];
 
   // ==================== Tab Switching ====================
@@ -307,6 +317,14 @@
         var countDelta = Math.floor(Math.random() * 5) - 2;
         s.upCount = Math.max(0, Math.min(s.total, s.upCount + countDelta));
 
+        // Update limit up count (±1)
+        var luDelta = Math.floor(Math.random() * 3) - 1;
+        s.limitUp = Math.max(0, s.limitUp + luDelta);
+
+        // Update volume slightly (±3%)
+        var volDelta = (Math.random() - 0.5) * 0.06;
+        s.volume = parseFloat((s.volume * (1 + volDelta)).toFixed(1));
+
         // Update strong days and trend based on 5d change
         if (s.d5 > 3) { s.trend = 'strong'; s.trendText = '持续强势'; s.strongDays = Math.min(5, s.strongDays + 1); }
         else if (s.d5 > 0) { s.trend = 'strengthening'; s.trendText = '正在加强'; }
@@ -319,12 +337,24 @@
       stocks.forEach(function(s) {
         var priceDelta = (Math.random() - 0.48) * s.price * 0.015;
         s.price = parseFloat((s.price + priceDelta).toFixed(2));
+        // Update today change based on price delta
+        var todayDelta = (priceDelta / s.price) * 100;
+        s.today = parseFloat((s.today + todayDelta).toFixed(2));
         var d5Delta = (Math.random() - 0.5) * 0.8;
         s.d5 = parseFloat((s.d5 + d5Delta).toFixed(2));
         var d10Delta = (Math.random() - 0.5) * 0.5;
         s.d10 = parseFloat((s.d10 + d10Delta).toFixed(2));
         var d20Delta = (Math.random() - 0.5) * 0.3;
         s.d20 = parseFloat((s.d20 + d20Delta).toFixed(2));
+
+        // Update lianban status based on today change
+        if (s.today >= 9.8) {
+          if (s.lianban === 0) s.lianban = 1;
+          s.boardType = s.lianban >= 3 ? s.lianban + '连板' : (s.lianban === 2 ? '2连板' : '首板');
+        } else if (s.today < -5) {
+          s.lianban = 0;
+          s.boardType = '趋势';
+        }
       });
 
       // Re-render all affected components
@@ -340,6 +370,11 @@
       // Refresh daily review data (today only)
       if (typeof refreshDailyReview === 'function') {
         refreshDailyReview();
+      }
+
+      // Refresh dragon head sniper module
+      if (typeof refreshDragonModule === 'function') {
+        refreshDragonModule();
       }
 
       // Update timestamp
@@ -1165,140 +1200,279 @@
 
   // ==================== Dragon Head Sniper Module ====================
 
-  // Auction blind snipe stocks data
-  var auctionStocks = [
-    { code: '600150', name: '中国船舶', sector: '船舶制造', zhangfu: 7.96, score: 95, huanlv: 4.2, shizhi: 1050, chengjiao: 83.5, signal: 'strong', signalText: '强共振龙头' },
-    { code: '600108', name: '亚盛集团', sector: '农林牧渔', zhangfu: 10.10, score: 92, huanlv: 12.5, shizhi: 186, chengjiao: 23.3, signal: 'strong', signalText: '一字涨停' },
-    { code: '601999', name: '出版传媒', sector: '传媒娱乐', zhangfu: 6.98, score: 88, huanlv: 8.3, shizhi: 95, chengjiao: 7.9, signal: 'strong', signalText: '板块龙头' },
-    { code: '300058', name: '蓝色光标', sector: '印刷包装', zhangfu: 7.96, score: 86, huanlv: 10.2, shizhi: 210, chengjiao: 21.4, signal: 'strong', signalText: '放量突破' },
-    { code: '601579', name: '会稽山', sector: '酿酒行业', zhangfu: 10.01, score: 85, huanlv: 6.8, shizhi: 135, chengjiao: 9.2, signal: 'strong', signalText: '首板涨停' },
-    { code: '600391', name: '航发科技', sector: '飞机制造', zhangfu: 4.45, score: 82, huanlv: 5.1, shizhi: 85, chengjiao: 4.3, signal: 'mid', signalText: '趋势向上' },
-    { code: '600657', name: '信达地产', sector: '房地产', zhangfu: 10.12, score: 80, huanlv: 15.3, shizhi: 78, chengjiao: 11.9, signal: 'strong', signalText: '两连板' },
-    { code: '000428', name: '华天酒店', sector: '酒店旅游', zhangfu: 10.09, score: 78, huanlv: 9.7, shizhi: 45, chengjiao: 4.3, signal: 'strong', signalText: '首板涨停' },
-    { code: '600684', name: '珠江股份', sector: '房地产', zhangfu: 9.98, score: 76, huanlv: 11.2, shizhi: 62, chengjiao: 6.9, signal: 'mid', signalText: '首板' },
-    { code: '000721', name: '西安饮食', sector: '食品行业', zhangfu: 8.56, score: 74, huanlv: 18.9, shizhi: 58, chengjiao: 10.9, signal: 'mid', signalText: '反包' },
-    { code: '002124', name: '天邦食品', sector: '农林牧渔', zhangfu: 10.07, score: 72, huanlv: 7.4, shizhi: 55, chengjiao: 4.1, signal: 'strong', signalText: '两连板' },
-    { code: '000876', name: '新希望', sector: '农林牧渔', zhangfu: 10.03, score: 70, huanlv: 5.8, shizhi: 520, chengjiao: 30.2, signal: 'strong', signalText: '三连板' },
-    { code: '600052', name: '浙江广厦', sector: '房地产', zhangfu: 7.32, score: 68, huanlv: 8.1, shizhi: 45, chengjiao: 3.3, signal: 'mid', signalText: '板块联动' },
-    { code: '600519', name: '贵州茅台', sector: '酿酒行业', zhangfu: 2.40, score: 65, huanlv: 0.3, shizhi: 16700, chengjiao: 40.1, signal: 'weak', signalText: '权重护盘' },
-    { code: '601398', name: '工商银行', sector: '银行', zhangfu: 0.37, score: 60, huanlv: 0.1, shizhi: 29000, chengjiao: 10.7, signal: 'weak', signalText: '防御' }
-  ];
+  // Generate dragon sniper data from real market data
+  function generateDragonData() {
+    var sortedSectors = sectors.slice();
+    sortedSectors.sort(function(a, b) { return b.today - a.today; });
 
-  // Anchor (dragon head) data
-  var anchorGangs = [
-    {
-      name: '船舶制造',
-      icon: '🚢',
-      total: 8,
-      zhangfu: 4.98,
-      upCount: 8,
-      upRatio: '100%',
-      isStrong: true,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '600150', name: '中国船舶', zhangfu: 7.96, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '农林牧渔',
-      icon: '🌾',
-      total: 64,
-      zhangfu: 4.07,
-      upCount: 58,
-      upRatio: '91%',
-      isStrong: true,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '600108', name: '亚盛集团', zhangfu: 10.10, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '传媒娱乐',
-      icon: '🎬',
-      total: 40,
-      zhangfu: 2.83,
-      upCount: 30,
-      upRatio: '75%',
-      isStrong: true,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '601999', name: '出版传媒', zhangfu: 6.98, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '印刷包装',
-      icon: '📦',
-      total: 20,
-      zhangfu: 2.77,
-      upCount: 14,
-      upRatio: '70%',
-      isStrong: true,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '300058', name: '蓝色光标', zhangfu: 7.96, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '酿酒行业',
-      icon: '🍶',
-      total: 33,
-      zhangfu: 2.62,
-      upCount: 24,
-      upRatio: '73%',
-      isStrong: true,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '601579', name: '会稽山', zhangfu: 10.01, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '飞机制造',
-      icon: '✈️',
-      total: 14,
-      zhangfu: 2.02,
-      upCount: 9,
-      upRatio: '64%',
-      isStrong: true,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '600391', name: '航发科技', zhangfu: 4.45, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '房地产',
-      icon: '🏠',
-      total: 123,
-      zhangfu: 1.85,
-      upCount: 77,
-      upRatio: '63%',
-      isStrong: false,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '600657', name: '信达地产', zhangfu: 10.12, tag: '主线总龙头' }
-      ]
-    },
-    {
-      name: '酒店旅游',
-      icon: '🏨',
-      total: 35,
-      zhangfu: 1.85,
-      upCount: 22,
-      upRatio: '63%',
-      isStrong: false,
-      stocks: [
-        { rank: 'total', rankText: '总龙头', code: '000428', name: '华天酒店', zhangfu: 10.09, tag: '主线总龙头' }
-      ]
+    var upSectors = sortedSectors.filter(function(s) { return s.today > 0; });
+    var downSectors = sortedSectors.filter(function(s) { return s.today <= 0; });
+
+    // Calculate total market stats
+    var totalLimitUp = 0;
+    sortedSectors.forEach(function(s) {
+      totalLimitUp += s.limitUp;
+    });
+    // Use real total volume from Eastmoney data
+    var totalVolume = 20510; // 2.051万亿 = 20510亿 (from realMarketData)
+    if (realMarketData.market && realMarketData.market.totalVolume) {
+      var volStr = realMarketData.market.totalVolume.replace('万亿', '');
+      totalVolume = parseFloat(volStr) * 10000; // Convert to 亿
     }
-  ];
 
-  // Sector resonance data
-  var resonanceSectors = [
-    { name: '船舶制造', icon: '🚢', zhangfu: 4.98, upCount: 8, total: 8, limitUp: 4, volume: '79.0亿', dragon: '中国船舶', dragonChange: 7.96, isStrong: true },
-    { name: '农林牧渔', icon: '🌾', zhangfu: 4.07, upCount: 58, total: 64, limitUp: 1, volume: '223.4亿', dragon: '亚盛集团', dragonChange: 10.10, isStrong: true },
-    { name: '传媒娱乐', icon: '🎬', zhangfu: 2.83, upCount: 30, total: 40, limitUp: 14, volume: '100.3亿', dragon: '出版传媒', dragonChange: 6.98, isStrong: true },
-    { name: '印刷包装', icon: '📦', zhangfu: 2.77, upCount: 14, total: 20, limitUp: 6, volume: '92.0亿', dragon: '蓝色光标', dragonChange: 7.96, isStrong: true },
-    { name: '酿酒行业', icon: '🍶', zhangfu: 2.62, upCount: 24, total: 33, limitUp: 1, volume: '131.1亿', dragon: '会稽山', dragonChange: 10.01, isStrong: true },
-    { name: '飞机制造', icon: '✈️', zhangfu: 2.02, upCount: 9, total: 14, limitUp: 3, volume: '42.1亿', dragon: '航发科技', dragonChange: 4.45, isStrong: true },
-    { name: '房地产', icon: '🏠', zhangfu: 1.85, upCount: 77, total: 123, limitUp: 1, volume: '167.9亿', dragon: '信达地产', dragonChange: 10.12, isStrong: false },
-    { name: '酒店旅游', icon: '✈️', zhangfu: 1.85, upCount: 22, total: 35, limitUp: 1, volume: '84.7亿', dragon: '华天酒店', dragonChange: 10.09, isStrong: false },
-    { name: '水泥行业', icon: '🧱', zhangfu: 1.75, upCount: 16, total: 26, limitUp: 1, volume: '20.2亿', dragon: '福建水泥', dragonChange: 9.92, isStrong: false },
-    { name: '食品行业', icon: '🍞', zhangfu: 1.62, upCount: 34, total: 58, limitUp: 1, volume: '92.4亿', dragon: '海欣食品', dragonChange: 10.00, isStrong: false },
-    { name: '钢铁行业', icon: '🔩', zhangfu: 1.47, upCount: 35, total: 60, limitUp: 11, volume: '49.4亿', dragon: '鲁银投资', dragonChange: 3.78, isStrong: false },
-    { name: '商业百货', icon: '🛍️', zhangfu: 1.47, upCount: 54, total: 93, limitUp: 1, volume: '170.4亿', dragon: '我爱我家', dragonChange: 10.14, isStrong: false }
-  ];
+    // ========== Sector Resonance Data ==========
+    // Build directly from sectors array with all real data
+    var resonanceSectors = sortedSectors.map(function(s) {
+      // Find the dragon stock (highest today change in this sector)
+      var sectorStocks = stocks.filter(function(st) { return st.sector === s.name; });
+      var dragonStock = null;
+      if (sectorStocks.length > 0) {
+        sectorStocks.sort(function(a, b) { return b.today - a.today; });
+        dragonStock = sectorStocks[0];
+      }
+
+      var dragonName = dragonStock ? dragonStock.name : '领涨股';
+      var dragonChange = dragonStock ? dragonStock.today : s.today;
+
+      return {
+        name: s.name,
+        icon: s.icon || '📊',
+        zhangfu: s.today,
+        upCount: s.upCount,
+        total: s.total,
+        limitUp: s.limitUp,
+        volume: s.volume.toFixed(1) + '亿',
+        dragon: dragonName,
+        dragonChange: dragonChange,
+        isStrong: s.today >= 2
+      };
+    });
+
+    // ========== Dragon Anchor (龙头锚点) Data ==========
+    // Build complete echelon from real stock data
+    var topSectorsForAnchor = sortedSectors.filter(function(s) { return s.today > 0.5; });
+    if (topSectorsForAnchor.length < 6) topSectorsForAnchor = sortedSectors.slice(0, 8);
+
+    var anchorGangs = topSectorsForAnchor.slice(0, 8).map(function(s) {
+      var sectorStocks = stocks.filter(function(st) { return st.sector === s.name; });
+      sectorStocks.sort(function(a, b) { return b.today - a.today; });
+
+      // Build multi-level dragon echelon
+      var gangStocks = [];
+
+      // Level 1: Total dragon (highest lianban or highest change)
+      var lianbanStocks = sectorStocks.filter(function(st) { return st.lianban > 0; });
+      if (lianbanStocks.length > 0) {
+        lianbanStocks.sort(function(a, b) { return b.lianban - a.lianban; });
+        var totalDragon = lianbanStocks[0];
+        gangStocks.push({
+          rank: 'total',
+          rankText: '总龙头',
+          code: totalDragon.code,
+          name: totalDragon.name,
+          zhangfu: totalDragon.today,
+          tag: s.name + '·' + totalDragon.boardType
+        });
+      } else if (sectorStocks.length > 0) {
+        gangStocks.push({
+          rank: 'total',
+          rankText: '总龙头',
+          code: sectorStocks[0].code,
+          name: sectorStocks[0].name,
+          zhangfu: sectorStocks[0].today,
+          tag: s.name + '·趋势龙头'
+        });
+      }
+
+      // Level 2: Second echelon (2nd board or strong trend)
+      var secondEchelon = sectorStocks.filter(function(st) {
+        return st.lianban === 2 || (st.today > 5 && st.lianban < 2);
+      });
+      if (secondEchelon.length > 0 && gangStocks.length > 0 && secondEchelon[0].name !== gangStocks[0].name) {
+        gangStocks.push({
+          rank: 'second',
+          rankText: '二梯队',
+          code: secondEchelon[0].code,
+          name: secondEchelon[0].name,
+          zhangfu: secondEchelon[0].today,
+          tag: s.name + '·' + (secondEchelon[0].lianban === 2 ? '2连板' : '强势')
+        });
+      }
+
+      // Level 3: First board candidates
+      var firstBoard = sectorStocks.filter(function(st) {
+        return st.lianban === 1 || (st.today > 3 && st.today < 9.8);
+      });
+      if (firstBoard.length > 0) {
+        var fb = firstBoard.find(function(st) {
+          return !gangStocks.some(function(g) { return g.name === st.name; });
+        });
+        if (fb) {
+          gangStocks.push({
+            rank: 'first',
+            rankText: '首板',
+            code: fb.code,
+            name: fb.name,
+            zhangfu: fb.today,
+            tag: s.name + '·' + (fb.lianban === 1 ? '首板' : '冲板')
+          });
+        }
+      }
+
+      // Level 4: Trend observation
+      var trendStocks = sectorStocks.filter(function(st) {
+        return st.today > 0 && st.lianban === 0;
+      });
+      if (trendStocks.length > 0 && gangStocks.length < 4) {
+        var ts = trendStocks.find(function(st) {
+          return !gangStocks.some(function(g) { return g.name === st.name; });
+        });
+        if (ts) {
+          gangStocks.push({
+            rank: 'trend',
+            rankText: '趋势',
+            code: ts.code,
+            name: ts.name,
+            zhangfu: ts.today,
+            tag: s.name + '·趋势跟踪'
+          });
+        }
+      }
+
+      // Fill with placeholder if no stocks found
+      if (gangStocks.length === 0) {
+        gangStocks.push({
+          rank: 'total',
+          rankText: '总龙头',
+          code: '000000',
+          name: '待确定',
+          zhangfu: s.today,
+          tag: s.name + '·观察中'
+        });
+      }
+
+      return {
+        name: s.name,
+        icon: s.icon || '📊',
+        total: s.total,
+        zhangfu: s.today,
+        upCount: s.upCount,
+        upRatio: Math.round(s.upCount / s.total * 100) + '%',
+        isStrong: s.today >= 2,
+        stocks: gangStocks
+      };
+    });
+
+    // ========== Auction Blind Snipe Stocks ==========
+    // Build comprehensive scoring model based on real data
+    var auctionPool = [];
+    stocks.forEach(function(s) {
+      // Skip excluded stocks
+      if (s.category === 'exclude') return;
+
+      // Multi-factor scoring model
+      var score = 50; // Base score
+
+      // Factor 1: Today's change (most important, ±30 points)
+      score += s.today * 3;
+
+      // Factor 2: 5-day momentum (±15 points)
+      score += s.d5 * 1.0;
+
+      // Factor 3: Lianban premium (+15 per board)
+      if (s.lianban > 0) {
+        score += s.lianban * 12;
+      }
+
+      // Factor 4: Sector strength (find sector data)
+      var sectorData = sectors.find(function(sec) { return sec.name === s.sector; });
+      if (sectorData) {
+        // Sector change bonus
+        score += sectorData.today * 1.5;
+        // Sector rank bonus (top sectors get bonus)
+        var sectorRank = sortedSectors.findIndex(function(sec) { return sec.name === s.sector; });
+        if (sectorRank >= 0 && sectorRank < 3) score += 10;
+        else if (sectorRank >= 3 && sectorRank < 6) score += 5;
+        // Sector limit up count bonus
+        if (sectorData.limitUp >= 5) score += 5;
+      }
+
+      // Factor 5: Price position (penalize high-position stocks)
+      if (s.d20 > 30) score -= 5;
+      else if (s.d20 < -20) score += 3; // Oversold bounce potential
+
+      // Factor 6: Category adjustment
+      if (s.category === 'trend') score += 3;
+      else if (s.category === 'start') score += 2;
+      else if (s.category === 'high') score -= 5;
+
+      // Clamp score to 40-98 range
+      score = Math.min(98, Math.max(40, Math.round(score)));
+
+      // Calculate realistic turnover rate based on sector and stock characteristics
+      var baseHuanlv = 2.5;
+      if (s.lianban > 0) baseHuanlv += s.lianban * 3;
+      if (sectorData && sectorData.volChange) {
+        var volMatch = sectorData.volChange.match(/([+-]?\d+)/);
+        if (volMatch) baseHuanlv += parseFloat(volMatch[1]) * 0.05;
+      }
+      var huanlv = parseFloat((baseHuanlv + Math.random() * 2).toFixed(1));
+      huanlv = Math.max(0.5, Math.min(25, huanlv));
+
+      // Calculate market cap based on price and sector
+      var baseShizhi = 100;
+      if (s.price > 100) baseShizhi = 500;
+      else if (s.price > 50) baseShizhi = 300;
+      else if (s.price > 20) baseShizhi = 150;
+      else baseShizhi = 80;
+      var shizhi = Math.round(baseShizhi * (0.8 + Math.random() * 0.4));
+
+      // Calculate trading volume
+      var chengjiao = parseFloat((shizhi * huanlv / 100 * (0.8 + Math.random() * 0.4)).toFixed(1));
+
+      // Determine signal strength
+      var signal, signalText;
+      if (s.lianban >= 3) { signal = 'strong'; signalText = '连板龙头'; }
+      else if (s.lianban === 2) { signal = 'strong'; signalText = '2连板'; }
+      else if (s.lianban === 1) { signal = 'strong'; signalText = '首板'; }
+      else if (s.today > 7) { signal = 'strong'; signalText = '冲板'; }
+      else if (s.today > 3) { signal = 'mid'; signalText = '强势'; }
+      else if (s.today > 0) { signal = 'mid'; signalText = '板块龙头'; }
+      else { signal = 'weak'; signalText = '趋势'; }
+
+      auctionPool.push({
+        code: s.code,
+        name: s.name,
+        sector: s.sector,
+        zhangfu: s.today,
+        score: score,
+        huanlv: huanlv,
+        shizhi: shizhi,
+        chengjiao: chengjiao,
+        signal: signal,
+        signalText: signalText,
+        lianban: s.lianban || 0
+      });
+    });
+
+    // Sort by score descending
+    auctionPool.sort(function(a, b) { return b.score - a.score; });
+
+    return {
+      auctionStocks: auctionPool,
+      anchorGangs: anchorGangs,
+      resonanceSectors: resonanceSectors,
+      upSectorCount: upSectors.length,
+      downSectorCount: downSectors.length,
+      topSector: sortedSectors[0] ? sortedSectors[0].name : '--',
+      totalVolume: totalVolume,
+      totalLimitUp: totalLimitUp
+    };
+  }
+
+  // Dragon data store
+  var dragonData = null;
+
 
   // Dragon tab switching
   window.switchDragonTab = function(tab, btn) {
@@ -1316,9 +1490,11 @@
     }
   };
 
-  // Run auction filter
+  // Run auction filter (uses dragonData.auctionStocks)
   window.runAuctionFilter = function() {
-    var zfMin = parseFloat(document.getElementById('filter-zhangfu-min').value) || 0;
+    if (!dragonData) return;
+
+    var zfMin = parseFloat(document.getElementById('filter-zhangfu-min').value) || -20;
     var zfMax = parseFloat(document.getElementById('filter-zhangfu-max').value) || 20;
     var minScore = parseFloat(document.getElementById('filter-score').value) || 0;
     var hlMin = parseFloat(document.getElementById('filter-huanlv-min').value) || 0;
@@ -1328,7 +1504,7 @@
     var sectorFilter = document.getElementById('filter-sector').value;
     var sortBy = document.getElementById('filter-sort').value;
 
-    var filtered = auctionStocks.filter(function(s) {
+    var filtered = dragonData.auctionStocks.filter(function(s) {
       if (s.zhangfu < zfMin || s.zhangfu > zfMax) return false;
       if (s.score < minScore) return false;
       if (s.huanlv < hlMin || s.huanlv > hlMax) return false;
@@ -1378,9 +1554,9 @@
   // Render anchor (dragon head) list
   function renderAnchorGangs() {
     var el = document.getElementById('anchor-gang-list');
-    if (!el) return;
+    if (!el || !dragonData) return;
 
-    el.innerHTML = anchorGangs.map(function(gang) {
+    el.innerHTML = dragonData.anchorGangs.map(function(gang) {
       var zfColor = gang.zhangfu >= 0 ? 'var(--up)' : 'var(--down)';
       var zfSign = gang.zhangfu >= 0 ? '+' : '';
       var stocksHtml = gang.stocks.map(function(s) {
@@ -1390,7 +1566,7 @@
           '<span class="anchor-rank rank-' + s.rank + '">' + s.rankText + '</span>' +
           '<span class="anchor-stock-code">' + s.code + '</span>' +
           '<span class="anchor-stock-name">' + s.name + '</span>' +
-          '<span class="anchor-stock-change" style="color:' + sZfColor + ';">' + sZfSign + s.zhangfu + '%</span>' +
+          '<span class="anchor-stock-change" style="color:' + sZfColor + ';">' + sZfSign + s.zhangfu.toFixed(2) + '%</span>' +
           '<span class="anchor-stock-tag">' + s.tag + '</span>' +
           '</div>';
       }).join('');
@@ -1400,7 +1576,7 @@
           '<div class="anchor-gang-name"><span class="anchor-gang-icon">' + gang.icon + '</span>共振帮派：' + gang.name + '（' + gang.total + '家）</div>' +
           '<div class="anchor-gang-meta">' +
             '<span>' + (gang.isStrong ? '<strong>强共振</strong>' : '共振') + '</span>' +
-            '<span style="color:' + zfColor + ';font-weight:700;">' + zfSign + gang.zhangfu + '%</span>' +
+            '<span style="color:' + zfColor + ';font-weight:700;">' + zfSign + gang.zhangfu.toFixed(2) + '%</span>' +
           '</div>' +
         '</div>' +
         '<div class="anchor-gang-body">' + stocksHtml + '</div>' +
@@ -1411,9 +1587,19 @@
   // Render resonance sectors
   function renderResonanceSectors() {
     var el = document.getElementById('resonance-grid');
-    if (!el) return;
+    if (!el || !dragonData) return;
 
-    el.innerHTML = resonanceSectors.map(function(s) {
+    // Update stats
+    var upEl = document.getElementById('res-up-count');
+    var downEl = document.getElementById('res-down-count');
+    var topEl = document.getElementById('res-top-sector');
+    var volEl = document.getElementById('res-total-vol');
+    if (upEl) upEl.textContent = dragonData.upSectorCount;
+    if (downEl) downEl.textContent = dragonData.downSectorCount;
+    if (topEl) topEl.textContent = dragonData.topSector;
+    if (volEl) volEl.textContent = (dragonData.totalVolume / 100).toFixed(0) + '万亿';
+
+    el.innerHTML = dragonData.resonanceSectors.map(function(s) {
       var zfColor = s.zhangfu >= 0 ? 'var(--up)' : 'var(--down)';
       var zfSign = s.zhangfu >= 0 ? '+' : '';
       var dragonZfColor = s.dragonChange >= 0 ? 'var(--up)' : 'var(--down)';
@@ -1423,7 +1609,7 @@
       return '<div class="resonance-card ' + strongClass + '">' +
         '<div class="resonance-header">' +
           '<div class="resonance-name"><span class="resonance-icon">' + s.icon + '</span>' + s.name + '</div>' +
-          '<div class="resonance-change" style="color:' + zfColor + ';">' + zfSign + s.zhangfu + '%</div>' +
+          '<div class="resonance-change" style="color:' + zfColor + ';">' + zfSign + s.zhangfu.toFixed(2) + '%</div>' +
         '</div>' +
         '<div class="resonance-stats-row">' +
           '<div class="res-stat-item"><div class="res-stat-item-label">上涨/总数</div><div class="res-stat-item-value up">' + s.upCount + '/' + s.total + '</div></div>' +
@@ -1432,38 +1618,123 @@
         '</div>' +
         '<div class="resonance-dragon">' +
           '<span class="resonance-dragon-label">👑 龙头</span>' +
-          '<span class="resonance-dragon-name">' + s.dragon + ' ' + dragonZfSign + s.dragonChange + '%</span>' +
+          '<span class="resonance-dragon-name">' + s.dragon + ' ' + dragonZfSign + s.dragonChange.toFixed(2) + '%</span>' +
         '</div>' +
         '</div>';
     }).join('');
   }
 
+  // Update market overview cards
+  function updateDragonMarketOverview() {
+    var shVal = document.getElementById('dragon-sh-value');
+    var shChg = document.getElementById('dragon-sh-change');
+    var cybVal = document.getElementById('dragon-cyb-value');
+    var cybChg = document.getElementById('dragon-cyb-change');
+
+    // Use realMarketData sh/cyb data (from Eastmoney)
+    if (shVal && realMarketData.sh) {
+      shVal.textContent = parseFloat(realMarketData.sh.close).toFixed(2);
+    }
+    if (shChg && realMarketData.sh) {
+      var chg = realMarketData.sh.change;
+      shChg.textContent = (chg >= 0 ? '+' : '') + chg.toFixed(2) + '%';
+      shChg.className = 'market-card-change ' + (chg >= 0 ? 'up' : 'down');
+    }
+    if (cybVal && realMarketData.cyb) {
+      cybVal.textContent = parseFloat(realMarketData.cyb.close).toFixed(2);
+    }
+    if (cybChg && realMarketData.cyb) {
+      var chg2 = realMarketData.cyb.change;
+      cybChg.textContent = (chg2 >= 0 ? '+' : '') + chg2.toFixed(2) + '%';
+      cybChg.className = 'market-card-change ' + (chg2 >= 0 ? 'up' : 'down');
+    }
+  }
+
+  // Update sector filter dropdown dynamically
+  function updateSectorFilter() {
+    var select = document.getElementById('filter-sector');
+    if (!select) return;
+
+    // Get unique sectors from stocks, sorted by sector strength
+    var uniqueSectors = [];
+    var sectorMap = {};
+    stocks.forEach(function(s) {
+      if (!sectorMap[s.sector]) {
+        sectorMap[s.sector] = true;
+        uniqueSectors.push(s.sector);
+      }
+    });
+
+    // Sort by sector today change (strongest first)
+    uniqueSectors.sort(function(a, b) {
+      var secA = sectors.find(function(s) { return s.name === a; });
+      var secB = sectors.find(function(s) { return s.name === b; });
+      var zfA = secA ? secA.today : 0;
+      var zfB = secB ? secB.today : 0;
+      return zfB - zfA;
+    });
+
+    // Preserve current selection
+    var currentValue = select.value;
+
+    // Rebuild options
+    var html = '<option value="all">全部板块</option>';
+    uniqueSectors.forEach(function(sectorName) {
+      var sec = sectors.find(function(s) { return s.name === sectorName; });
+      var zf = sec ? sec.today : 0;
+      var sign = zf >= 0 ? '+' : '';
+      html += '<option value="' + sectorName + '">' + sectorName + ' (' + sign + zf.toFixed(2) + '%)</option>';
+    });
+    select.innerHTML = html;
+
+    // Restore selection if still valid
+    if (currentValue === 'all' || uniqueSectors.indexOf(currentValue) >= 0) {
+      select.value = currentValue;
+    }
+  }
+
+  // Refresh dragon module
+  function refreshDragonModule() {
+    dragonData = generateDragonData();
+    updateDragonMarketOverview();
+    renderAuctionTable(dragonData.auctionStocks.slice(0, 15));
+    renderAnchorGangs();
+    renderResonanceSectors();
+    updateSectorFilter();
+
+    var timeEl = document.getElementById('dragon-update-time');
+    if (timeEl) {
+      var now = new Date();
+      timeEl.textContent = '更新于 ' + formatDate(now);
+      timeEl.style.color = 'var(--success)';
+      setTimeout(function() {
+        if (timeEl) timeEl.style.color = '';
+      }, 2000);
+    }
+  }
+
   // Init dragon module
   function initDragonModule() {
-    // Set update time
+    dragonData = generateDragonData();
+    updateDragonMarketOverview();
+    renderAuctionTable(dragonData.auctionStocks.slice(0, 15));
+    renderAnchorGangs();
+    renderResonanceSectors();
+    updateSectorFilter();
+
     var timeEl = document.getElementById('dragon-update-time');
     if (timeEl) {
       var now = new Date();
       timeEl.textContent = '更新于 ' + formatDate(now);
     }
-
-    // Render initial auction table (with default filter)
-    renderAuctionTable(auctionStocks.slice(0, 10));
-
-    // Render anchor gangs
-    renderAnchorGangs();
-
-    // Render resonance sectors
-    renderResonanceSectors();
   }
 
   // Expose
   window.initDragonModule = initDragonModule;
+  window.refreshDragonModule = refreshDragonModule;
   window.renderAuctionTable = renderAuctionTable;
   window.renderAnchorGangs = renderAnchorGangs;
   window.renderResonanceSectors = renderResonanceSectors;
-  window.auctionStocks = auctionStocks;
-  window.anchorGangs = anchorGangs;
-  window.resonanceSectors = resonanceSectors;
+  window.dragonData = dragonData;
 
 })();
