@@ -413,6 +413,7 @@
     setupCategoryFilters();
     updateTimeDisplay();
     initDailyReview();
+    initDragonModule();
   });
 
   // ==================== Daily Review Module ====================
@@ -1161,4 +1162,308 @@
   window.initDailyReview = initDailyReview;
   window.dailyData = dailyData;
   window.refreshDailyReview = refreshDailyReview;
+
+  // ==================== Dragon Head Sniper Module ====================
+
+  // Auction blind snipe stocks data
+  var auctionStocks = [
+    { code: '600150', name: '中国船舶', sector: '船舶制造', zhangfu: 7.96, score: 95, huanlv: 4.2, shizhi: 1050, chengjiao: 83.5, signal: 'strong', signalText: '强共振龙头' },
+    { code: '600108', name: '亚盛集团', sector: '农林牧渔', zhangfu: 10.10, score: 92, huanlv: 12.5, shizhi: 186, chengjiao: 23.3, signal: 'strong', signalText: '一字涨停' },
+    { code: '601999', name: '出版传媒', sector: '传媒娱乐', zhangfu: 6.98, score: 88, huanlv: 8.3, shizhi: 95, chengjiao: 7.9, signal: 'strong', signalText: '板块龙头' },
+    { code: '300058', name: '蓝色光标', sector: '印刷包装', zhangfu: 7.96, score: 86, huanlv: 10.2, shizhi: 210, chengjiao: 21.4, signal: 'strong', signalText: '放量突破' },
+    { code: '601579', name: '会稽山', sector: '酿酒行业', zhangfu: 10.01, score: 85, huanlv: 6.8, shizhi: 135, chengjiao: 9.2, signal: 'strong', signalText: '首板涨停' },
+    { code: '600391', name: '航发科技', sector: '飞机制造', zhangfu: 4.45, score: 82, huanlv: 5.1, shizhi: 85, chengjiao: 4.3, signal: 'mid', signalText: '趋势向上' },
+    { code: '600657', name: '信达地产', sector: '房地产', zhangfu: 10.12, score: 80, huanlv: 15.3, shizhi: 78, chengjiao: 11.9, signal: 'strong', signalText: '两连板' },
+    { code: '000428', name: '华天酒店', sector: '酒店旅游', zhangfu: 10.09, score: 78, huanlv: 9.7, shizhi: 45, chengjiao: 4.3, signal: 'strong', signalText: '首板涨停' },
+    { code: '600684', name: '珠江股份', sector: '房地产', zhangfu: 9.98, score: 76, huanlv: 11.2, shizhi: 62, chengjiao: 6.9, signal: 'mid', signalText: '首板' },
+    { code: '000721', name: '西安饮食', sector: '食品行业', zhangfu: 8.56, score: 74, huanlv: 18.9, shizhi: 58, chengjiao: 10.9, signal: 'mid', signalText: '反包' },
+    { code: '002124', name: '天邦食品', sector: '农林牧渔', zhangfu: 10.07, score: 72, huanlv: 7.4, shizhi: 55, chengjiao: 4.1, signal: 'strong', signalText: '两连板' },
+    { code: '000876', name: '新希望', sector: '农林牧渔', zhangfu: 10.03, score: 70, huanlv: 5.8, shizhi: 520, chengjiao: 30.2, signal: 'strong', signalText: '三连板' },
+    { code: '600052', name: '浙江广厦', sector: '房地产', zhangfu: 7.32, score: 68, huanlv: 8.1, shizhi: 45, chengjiao: 3.3, signal: 'mid', signalText: '板块联动' },
+    { code: '600519', name: '贵州茅台', sector: '酿酒行业', zhangfu: 2.40, score: 65, huanlv: 0.3, shizhi: 16700, chengjiao: 40.1, signal: 'weak', signalText: '权重护盘' },
+    { code: '601398', name: '工商银行', sector: '银行', zhangfu: 0.37, score: 60, huanlv: 0.1, shizhi: 29000, chengjiao: 10.7, signal: 'weak', signalText: '防御' }
+  ];
+
+  // Anchor (dragon head) data
+  var anchorGangs = [
+    {
+      name: '船舶制造',
+      icon: '🚢',
+      total: 8,
+      zhangfu: 4.98,
+      upCount: 8,
+      upRatio: '100%',
+      isStrong: true,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '600150', name: '中国船舶', zhangfu: 7.96, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '农林牧渔',
+      icon: '🌾',
+      total: 64,
+      zhangfu: 4.07,
+      upCount: 58,
+      upRatio: '91%',
+      isStrong: true,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '600108', name: '亚盛集团', zhangfu: 10.10, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '传媒娱乐',
+      icon: '🎬',
+      total: 40,
+      zhangfu: 2.83,
+      upCount: 30,
+      upRatio: '75%',
+      isStrong: true,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '601999', name: '出版传媒', zhangfu: 6.98, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '印刷包装',
+      icon: '📦',
+      total: 20,
+      zhangfu: 2.77,
+      upCount: 14,
+      upRatio: '70%',
+      isStrong: true,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '300058', name: '蓝色光标', zhangfu: 7.96, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '酿酒行业',
+      icon: '🍶',
+      total: 33,
+      zhangfu: 2.62,
+      upCount: 24,
+      upRatio: '73%',
+      isStrong: true,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '601579', name: '会稽山', zhangfu: 10.01, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '飞机制造',
+      icon: '✈️',
+      total: 14,
+      zhangfu: 2.02,
+      upCount: 9,
+      upRatio: '64%',
+      isStrong: true,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '600391', name: '航发科技', zhangfu: 4.45, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '房地产',
+      icon: '🏠',
+      total: 123,
+      zhangfu: 1.85,
+      upCount: 77,
+      upRatio: '63%',
+      isStrong: false,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '600657', name: '信达地产', zhangfu: 10.12, tag: '主线总龙头' }
+      ]
+    },
+    {
+      name: '酒店旅游',
+      icon: '🏨',
+      total: 35,
+      zhangfu: 1.85,
+      upCount: 22,
+      upRatio: '63%',
+      isStrong: false,
+      stocks: [
+        { rank: 'total', rankText: '总龙头', code: '000428', name: '华天酒店', zhangfu: 10.09, tag: '主线总龙头' }
+      ]
+    }
+  ];
+
+  // Sector resonance data
+  var resonanceSectors = [
+    { name: '船舶制造', icon: '🚢', zhangfu: 4.98, upCount: 8, total: 8, limitUp: 4, volume: '79.0亿', dragon: '中国船舶', dragonChange: 7.96, isStrong: true },
+    { name: '农林牧渔', icon: '🌾', zhangfu: 4.07, upCount: 58, total: 64, limitUp: 1, volume: '223.4亿', dragon: '亚盛集团', dragonChange: 10.10, isStrong: true },
+    { name: '传媒娱乐', icon: '🎬', zhangfu: 2.83, upCount: 30, total: 40, limitUp: 14, volume: '100.3亿', dragon: '出版传媒', dragonChange: 6.98, isStrong: true },
+    { name: '印刷包装', icon: '📦', zhangfu: 2.77, upCount: 14, total: 20, limitUp: 6, volume: '92.0亿', dragon: '蓝色光标', dragonChange: 7.96, isStrong: true },
+    { name: '酿酒行业', icon: '🍶', zhangfu: 2.62, upCount: 24, total: 33, limitUp: 1, volume: '131.1亿', dragon: '会稽山', dragonChange: 10.01, isStrong: true },
+    { name: '飞机制造', icon: '✈️', zhangfu: 2.02, upCount: 9, total: 14, limitUp: 3, volume: '42.1亿', dragon: '航发科技', dragonChange: 4.45, isStrong: true },
+    { name: '房地产', icon: '🏠', zhangfu: 1.85, upCount: 77, total: 123, limitUp: 1, volume: '167.9亿', dragon: '信达地产', dragonChange: 10.12, isStrong: false },
+    { name: '酒店旅游', icon: '✈️', zhangfu: 1.85, upCount: 22, total: 35, limitUp: 1, volume: '84.7亿', dragon: '华天酒店', dragonChange: 10.09, isStrong: false },
+    { name: '水泥行业', icon: '🧱', zhangfu: 1.75, upCount: 16, total: 26, limitUp: 1, volume: '20.2亿', dragon: '福建水泥', dragonChange: 9.92, isStrong: false },
+    { name: '食品行业', icon: '🍞', zhangfu: 1.62, upCount: 34, total: 58, limitUp: 1, volume: '92.4亿', dragon: '海欣食品', dragonChange: 10.00, isStrong: false },
+    { name: '钢铁行业', icon: '🔩', zhangfu: 1.47, upCount: 35, total: 60, limitUp: 11, volume: '49.4亿', dragon: '鲁银投资', dragonChange: 3.78, isStrong: false },
+    { name: '商业百货', icon: '🛍️', zhangfu: 1.47, upCount: 54, total: 93, limitUp: 1, volume: '170.4亿', dragon: '我爱我家', dragonChange: 10.14, isStrong: false }
+  ];
+
+  // Dragon tab switching
+  window.switchDragonTab = function(tab, btn) {
+    var tabs = btn.parentElement.querySelectorAll('.dragon-subtab');
+    tabs.forEach(function(t) { t.classList.remove('active'); });
+    btn.classList.add('active');
+
+    document.getElementById('dtab-auction').classList.toggle('hidden', tab !== 'auction');
+    document.getElementById('dtab-anchor').classList.toggle('hidden', tab !== 'anchor');
+    document.getElementById('dtab-resonance').classList.toggle('hidden', tab !== 'resonance');
+
+    // Force resize any charts if present
+    if (window.resizeAllCharts) {
+      setTimeout(function() { window.resizeAllCharts(); }, 50);
+    }
+  };
+
+  // Run auction filter
+  window.runAuctionFilter = function() {
+    var zfMin = parseFloat(document.getElementById('filter-zhangfu-min').value) || 0;
+    var zfMax = parseFloat(document.getElementById('filter-zhangfu-max').value) || 20;
+    var minScore = parseFloat(document.getElementById('filter-score').value) || 0;
+    var hlMin = parseFloat(document.getElementById('filter-huanlv-min').value) || 0;
+    var hlMax = parseFloat(document.getElementById('filter-huanlv-max').value) || 100;
+    var szMin = parseFloat(document.getElementById('filter-shizhi-min').value) || 0;
+    var szMax = parseFloat(document.getElementById('filter-shizhi-max').value) || 99999;
+    var sectorFilter = document.getElementById('filter-sector').value;
+    var sortBy = document.getElementById('filter-sort').value;
+
+    var filtered = auctionStocks.filter(function(s) {
+      if (s.zhangfu < zfMin || s.zhangfu > zfMax) return false;
+      if (s.score < minScore) return false;
+      if (s.huanlv < hlMin || s.huanlv > hlMax) return false;
+      if (s.shizhi < szMin || s.shizhi > szMax) return false;
+      if (sectorFilter !== 'all' && s.sector !== sectorFilter) return false;
+      return true;
+    });
+
+    // Sort
+    filtered.sort(function(a, b) {
+      if (sortBy === 'score') return b.score - a.score;
+      if (sortBy === 'zhangfu') return b.zhangfu - a.zhangfu;
+      if (sortBy === 'chengjiao') return b.chengjiao - a.chengjiao;
+      if (sortBy === 'huanlv') return b.huanlv - a.huanlv;
+      return 0;
+    });
+
+    renderAuctionTable(filtered);
+  };
+
+  function renderAuctionTable(stocks) {
+    var tbody = document.getElementById('auction-tbody');
+    var countEl = document.getElementById('auction-result-count');
+    if (countEl) countEl.textContent = '共 ' + stocks.length + ' 只符合条件';
+    if (!tbody) return;
+
+    tbody.innerHTML = stocks.map(function(s, i) {
+      var zfClass = s.zhangfu >= 0 ? 'pct-up' : 'pct-down';
+      var zfSign = s.zhangfu >= 0 ? '+' : '';
+      var scoreClass = s.score >= 80 ? 'score-high' : (s.score >= 60 ? 'score-mid' : 'score-low');
+      var signalClass = s.signal === 'strong' ? 'signal-strong' : (s.signal === 'mid' ? 'signal-mid' : 'signal-weak');
+      return '<tr>' +
+        '<td style="color:var(--muted);">' + (i + 1) + '</td>' +
+        '<td style="color:var(--muted);">' + s.code + '</td>' +
+        '<td class="stock-name">' + s.name + '</td>' +
+        '<td><span class="sector-mini-tag">' + s.sector + '</span></td>' +
+        '<td class="' + zfClass + '">' + zfSign + s.zhangfu.toFixed(2) + '%</td>' +
+        '<td><span class="score-badge ' + scoreClass + '">' + s.score + '</span></td>' +
+        '<td>' + s.huanlv.toFixed(1) + '%</td>' +
+        '<td>' + s.shizhi + '亿</td>' +
+        '<td>' + s.chengjiao + '亿</td>' +
+        '<td><span class="signal-tag ' + signalClass + '">' + s.signalText + '</span></td>' +
+        '</tr>';
+    }).join('');
+  }
+
+  // Render anchor (dragon head) list
+  function renderAnchorGangs() {
+    var el = document.getElementById('anchor-gang-list');
+    if (!el) return;
+
+    el.innerHTML = anchorGangs.map(function(gang) {
+      var zfColor = gang.zhangfu >= 0 ? 'var(--up)' : 'var(--down)';
+      var zfSign = gang.zhangfu >= 0 ? '+' : '';
+      var stocksHtml = gang.stocks.map(function(s) {
+        var sZfColor = s.zhangfu >= 0 ? 'var(--up)' : 'var(--down)';
+        var sZfSign = s.zhangfu >= 0 ? '+' : '';
+        return '<div class="anchor-stock-row">' +
+          '<span class="anchor-rank rank-' + s.rank + '">' + s.rankText + '</span>' +
+          '<span class="anchor-stock-code">' + s.code + '</span>' +
+          '<span class="anchor-stock-name">' + s.name + '</span>' +
+          '<span class="anchor-stock-change" style="color:' + sZfColor + ';">' + sZfSign + s.zhangfu + '%</span>' +
+          '<span class="anchor-stock-tag">' + s.tag + '</span>' +
+          '</div>';
+      }).join('');
+
+      return '<div class="anchor-gang-card">' +
+        '<div class="anchor-gang-header">' +
+          '<div class="anchor-gang-name"><span class="anchor-gang-icon">' + gang.icon + '</span>共振帮派：' + gang.name + '（' + gang.total + '家）</div>' +
+          '<div class="anchor-gang-meta">' +
+            '<span>' + (gang.isStrong ? '<strong>强共振</strong>' : '共振') + '</span>' +
+            '<span style="color:' + zfColor + ';font-weight:700;">' + zfSign + gang.zhangfu + '%</span>' +
+          '</div>' +
+        '</div>' +
+        '<div class="anchor-gang-body">' + stocksHtml + '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Render resonance sectors
+  function renderResonanceSectors() {
+    var el = document.getElementById('resonance-grid');
+    if (!el) return;
+
+    el.innerHTML = resonanceSectors.map(function(s) {
+      var zfColor = s.zhangfu >= 0 ? 'var(--up)' : 'var(--down)';
+      var zfSign = s.zhangfu >= 0 ? '+' : '';
+      var dragonZfColor = s.dragonChange >= 0 ? 'var(--up)' : 'var(--down)';
+      var dragonZfSign = s.dragonChange >= 0 ? '+' : '';
+      var strongClass = s.isStrong ? 'strong' : '';
+
+      return '<div class="resonance-card ' + strongClass + '">' +
+        '<div class="resonance-header">' +
+          '<div class="resonance-name"><span class="resonance-icon">' + s.icon + '</span>' + s.name + '</div>' +
+          '<div class="resonance-change" style="color:' + zfColor + ';">' + zfSign + s.zhangfu + '%</div>' +
+        '</div>' +
+        '<div class="resonance-stats-row">' +
+          '<div class="res-stat-item"><div class="res-stat-item-label">上涨/总数</div><div class="res-stat-item-value up">' + s.upCount + '/' + s.total + '</div></div>' +
+          '<div class="res-stat-item"><div class="res-stat-item-label">涨停数</div><div class="res-stat-item-value up">' + s.limitUp + '</div></div>' +
+          '<div class="res-stat-item"><div class="res-stat-item-label">成交额</div><div class="res-stat-item-value">' + s.volume + '</div></div>' +
+        '</div>' +
+        '<div class="resonance-dragon">' +
+          '<span class="resonance-dragon-label">👑 龙头</span>' +
+          '<span class="resonance-dragon-name">' + s.dragon + ' ' + dragonZfSign + s.dragonChange + '%</span>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // Init dragon module
+  function initDragonModule() {
+    // Set update time
+    var timeEl = document.getElementById('dragon-update-time');
+    if (timeEl) {
+      var now = new Date();
+      timeEl.textContent = '更新于 ' + formatDate(now);
+    }
+
+    // Render initial auction table (with default filter)
+    renderAuctionTable(auctionStocks.slice(0, 10));
+
+    // Render anchor gangs
+    renderAnchorGangs();
+
+    // Render resonance sectors
+    renderResonanceSectors();
+  }
+
+  // Expose
+  window.initDragonModule = initDragonModule;
+  window.renderAuctionTable = renderAuctionTable;
+  window.renderAnchorGangs = renderAnchorGangs;
+  window.renderResonanceSectors = renderResonanceSectors;
+  window.auctionStocks = auctionStocks;
+  window.anchorGangs = anchorGangs;
+  window.resonanceSectors = resonanceSectors;
+
 })();

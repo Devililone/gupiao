@@ -1753,6 +1753,337 @@
   }
   .compare-conclusion strong { color: var(--accent); }
 
+  /* =============== Dragon Head Sniper Styles =============== */
+  .dragon-wrap {
+    padding: 16px;
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+  .dragon-header {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 18px;
+    margin-bottom: 16px;
+  }
+  .dragon-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .dragon-title > span:first-child { font-size: 20px; }
+  .dragon-subtabs {
+    display: flex;
+    gap: 8px;
+  }
+  .dragon-subtab {
+    padding: 8px 18px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .dragon-subtab:hover { border-color: var(--accent); color: var(--accent); }
+  .dragon-subtab.active {
+    background: var(--accent);
+    border-color: var(--accent);
+    color: #fff;
+  }
+  .dragon-tab-content.hidden { display: none; }
+
+  /* Market Overview */
+  .dragon-market-overview {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .market-card {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 16px;
+    text-align: center;
+  }
+  .market-card-label { font-size: 12px; color: var(--muted); margin-bottom: 6px; }
+  .market-card-value { font-size: 22px; font-weight: 700; color: var(--ink); margin-bottom: 4px; }
+  .market-card-change { font-size: 12px; font-weight: 600; }
+  .market-card-change.up { color: var(--up); }
+  .market-card-change.down { color: var(--down); }
+
+  .dragon-section { margin-bottom: 20px; }
+  .dragon-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0 0 12px 0;
+    padding-left: 4px;
+    border-left: 3px solid var(--accent);
+  }
+  .section-desc { font-size: 11px; color: var(--muted); margin: -6px 0 12px 7px; }
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+  .result-count { font-size: 12px; color: var(--muted); }
+
+  /* Auction Filter Panel */
+  .auction-filter-panel {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .filter-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 12px;
+  }
+  .filter-row:last-child { margin-bottom: 0; }
+  .filter-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .filter-item.filter-wide { grid-column: span 2; }
+  .filter-item label { font-size: 11px; color: var(--muted); font-weight: 500; }
+  .filter-range { display: flex; align-items: center; gap: 6px; }
+  .filter-range span { color: var(--muted); font-size: 12px; }
+  .filter-input {
+    width: 100%;
+    padding: 6px 10px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: var(--ink);
+    font-size: 12px;
+    outline: none;
+  }
+  .filter-input:focus { border-color: var(--accent); }
+  .filter-select {
+    width: 100%;
+    padding: 6px 10px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    border-radius: 4px;
+    color: var(--ink);
+    font-size: 12px;
+    outline: none;
+  }
+  .auction-btn {
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: opacity 0.2s;
+  }
+  .auction-btn:hover { opacity: 0.9; }
+
+  /* Auction Table */
+  .auction-table-wrap {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .auction-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+  }
+  .auction-table th {
+    background: rgba(99,102,241,0.06);
+    color: var(--ink);
+    font-weight: 600;
+    padding: 10px;
+    text-align: center;
+    border-bottom: 1px solid var(--rule);
+    font-size: 11px;
+  }
+  .auction-table td {
+    padding: 10px;
+    border-bottom: 1px solid var(--rule);
+    color: var(--ink);
+    text-align: center;
+  }
+  .auction-table tr:last-child td { border-bottom: none; }
+  .auction-table tr:hover { background: rgba(99,102,241,0.03); }
+  .auction-table .pct-up { color: var(--up); font-weight: 700; }
+  .auction-table .pct-down { color: var(--down); font-weight: 700; }
+  .auction-table .stock-name { font-weight: 600; }
+  .auction-table .score-badge {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .score-high { background: rgba(239,68,68,0.1); color: var(--up); }
+  .score-mid { background: rgba(249,115,22,0.1); color: #f97316; }
+  .score-low { background: rgba(107,114,128,0.1); color: var(--muted); }
+  .signal-tag {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .signal-strong { background: rgba(239,68,68,0.12); color: var(--up); }
+  .signal-mid { background: rgba(249,115,22,0.12); color: #f97316; }
+  .signal-weak { background: rgba(107,114,128,0.1); color: var(--muted); }
+
+  /* Anchor Gang List */
+  .anchor-gang-list {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  .anchor-gang-card {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .anchor-gang-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 14px;
+    background: linear-gradient(90deg, rgba(99,102,241,0.08), transparent);
+    border-bottom: 1px solid var(--rule);
+  }
+  .anchor-gang-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .anchor-gang-icon { font-size: 16px; }
+  .anchor-gang-meta { display: flex; gap: 10px; font-size: 11px; }
+  .anchor-gang-meta span { color: var(--muted); }
+  .anchor-gang-meta strong { color: var(--up); font-weight: 600; }
+  .anchor-gang-body { padding: 10px 14px; }
+  .anchor-stock-row {
+    display: flex;
+    align-items: center;
+    padding: 6px 0;
+    border-bottom: 1px dashed var(--rule);
+    font-size: 12px;
+  }
+  .anchor-stock-row:last-child { border-bottom: none; }
+  .anchor-rank {
+    width: 28px;
+    height: 22px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+  }
+  .rank-total { background: rgba(239,68,68,0.15); color: var(--up); }
+  .rank-second { background: rgba(249,115,22,0.15); color: #f97316; }
+  .rank-third { background: rgba(234,179,8,0.15); color: #eab308; }
+  .anchor-stock-code { color: var(--muted); margin-right: 10px; width: 55px; }
+  .anchor-stock-name { font-weight: 600; flex: 1; }
+  .anchor-stock-change { font-weight: 700; margin-right: 10px; }
+  .anchor-stock-tag {
+    padding: 1px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    background: rgba(99,102,241,0.1);
+    color: var(--accent);
+  }
+
+  /* Resonance Grid */
+  .resonance-stats { display: flex; gap: 16px; }
+  .res-stat {
+    font-size: 11px;
+    color: var(--muted);
+    background: var(--bg2);
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--rule);
+  }
+  .res-stat strong { color: var(--ink); font-weight: 700; margin-left: 4px; }
+  .res-stat.up strong { color: var(--up); }
+  .res-stat.down strong { color: var(--down); }
+
+  .resonance-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+  }
+  .resonance-card {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+    padding: 12px 14px;
+    transition: border-color 0.2s;
+  }
+  .resonance-card:hover { border-color: var(--accent); }
+  .resonance-card.strong { border-left: 3px solid var(--up); }
+  .resonance-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+  }
+  .resonance-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .resonance-icon { font-size: 16px; }
+  .resonance-change {
+    font-size: 14px;
+    font-weight: 700;
+  }
+  .resonance-stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--rule);
+  }
+  .res-stat-item {
+    text-align: center;
+    font-size: 10px;
+  }
+  .res-stat-item-label { color: var(--muted); margin-bottom: 2px; }
+  .res-stat-item-value { font-weight: 700; color: var(--ink); font-size: 12px; }
+  .res-stat-item-value.up { color: var(--up); }
+  .resonance-dragon {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    font-size: 11px;
+  }
+  .resonance-dragon-label { color: var(--muted); }
+  .resonance-dragon-name { color: var(--up); font-weight: 700; }
+
   @media (max-width: 768px) {
     .daily-grid-2 { grid-template-columns: 1fr; }
     .daily-meta-bar { grid-template-columns: 1fr; }
@@ -1760,6 +2091,11 @@
     .phase-stats { grid-template-columns: repeat(3, 1fr); }
     .emotion-phase { grid-template-columns: 80px 1fr; }
     .emotion-timeline::before { left: 65px; }
+    .dragon-market-overview { grid-template-columns: repeat(2, 1fr); }
+    .filter-row { grid-template-columns: 1fr; }
+    .filter-item.filter-wide { grid-column: span 1; }
+    .anchor-gang-list { grid-template-columns: 1fr; }
+    .resonance-grid { grid-template-columns: 1fr; }
   }
 </style>
 </head>
@@ -1781,6 +2117,7 @@
       <button class="tab-btn" data-tab="sentiment">连板情绪</button>
       <button class="tab-btn" data-tab="rotation">板块轮动</button>
       <button class="tab-btn" data-tab="daily">每日复盘</button>
+      <button class="tab-btn" data-tab="dragon">龙头狙击</button>
     </div>
   </header>
 
@@ -3336,6 +3673,191 @@
               </table>
             </div>
             <div class="compare-conclusion" id="compare-conclusion">--</div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Tab 6: Dragon Head Sniper -->
+  <div class="tab-content" id="tab-dragon">
+    <div class="dragon-wrap">
+      <div class="dragon-header">
+        <div class="dragon-title">
+          <span>🐉</span> 龙头狙击 · 智能选股系统
+          <span style="margin-left:8px;font-size:10px;font-weight:400;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,0.1);color:var(--success);">● 实时数据</span>
+          <span id="dragon-update-time" style="margin-left:auto;font-size:11px;color:var(--muted);">更新于 --:--:--</span>
+        </div>
+        <!-- Dragon sub-tabs -->
+        <div class="dragon-subtabs">
+          <button class="dragon-subtab active" data-dtab="auction" onclick="switchDragonTab('auction', this)">🎯 竞价盲狙</button>
+          <button class="dragon-subtab" data-dtab="anchor" onclick="switchDragonTab('anchor', this)">👑 龙头锚点</button>
+          <button class="dragon-subtab" data-dtab="resonance" onclick="switchDragonTab('resonance', this)">🔥 板块共振</button>
+        </div>
+      </div>
+
+      <!-- Market Overview -->
+      <div class="dragon-market-overview">
+        <div class="market-card">
+          <div class="market-card-label">上证指数</div>
+          <div class="market-card-value" id="dragon-sh-value">3930.12</div>
+          <div class="market-card-change down" id="dragon-sh-change">-0.30% -11.97</div>
+        </div>
+        <div class="market-card">
+          <div class="market-card-label">深证成指</div>
+          <div class="market-card-value" id="dragon-sz-value">13516.97</div>
+          <div class="market-card-change down" id="dragon-sz-change">-0.79% -108.15</div>
+        </div>
+        <div class="market-card">
+          <div class="market-card-label">创业板指</div>
+          <div class="market-card-value" id="dragon-cyb-value">3286.55</div>
+          <div class="market-card-change down" id="dragon-cyb-change">-0.78% -25.99</div>
+        </div>
+        <div class="market-card">
+          <div class="market-card-label">科创50</div>
+          <div class="market-card-value" id="dragon-kc-value">1577.36</div>
+          <div class="market-card-change down" id="dragon-kc-change">-2.10% -33.81</div>
+        </div>
+      </div>
+
+      <!-- ========== Tab: 竞价盲狙 ========== -->
+      <div class="dragon-tab-content" id="dtab-auction">
+        <div class="dragon-section">
+          <h3 class="dragon-section-title">🎯 竞价盲狙选股</h3>
+          <div class="auction-filter-panel">
+            <div class="filter-row">
+              <div class="filter-item">
+                <label>竞价涨幅 (%)</label>
+                <div class="filter-range">
+                  <input type="number" value="2" min="0" max="20" id="filter-zhangfu-min" class="filter-input">
+                  <span>~</span>
+                  <input type="number" value="10" min="0" max="20" id="filter-zhangfu-max" class="filter-input">
+                </div>
+              </div>
+              <div class="filter-item">
+                <label>最低评分</label>
+                <input type="number" value="40" min="0" max="100" id="filter-score" class="filter-input">
+              </div>
+              <div class="filter-item">
+                <label>换手率 (%)</label>
+                <div class="filter-range">
+                  <input type="number" value="1" min="0" max="50" id="filter-huanlv-min" class="filter-input">
+                  <span>~</span>
+                  <input type="number" value="30" min="0" max="50" id="filter-huanlv-max" class="filter-input">
+                </div>
+              </div>
+              <div class="filter-item">
+                <label>流通市值 (亿)</label>
+                <div class="filter-range">
+                  <input type="number" value="20" min="0" id="filter-shizhi-min" class="filter-input">
+                  <span>~</span>
+                  <input type="number" value="1000" min="0" id="filter-shizhi-max" class="filter-input">
+                </div>
+              </div>
+            </div>
+            <div class="filter-row">
+              <div class="filter-item filter-wide">
+                <label>板块筛选</label>
+                <select id="filter-sector" class="filter-select">
+                  <option value="all">全部板块</option>
+                  <option value="算力基础设施">算力基础设施</option>
+                  <option value="芯片半导体">芯片半导体</option>
+                  <option value="人工智能">人工智能</option>
+                  <option value="新能源">新能源</option>
+                  <option value="机器人">机器人</option>
+                  <option value="医药生物">医药生物</option>
+                  <option value="化工行业">化工行业</option>
+                  <option value="电子信息">电子信息</option>
+                  <option value="软件服务">软件服务</option>
+                  <option value="通信设备">通信设备</option>
+                  <option value="汽车制造">汽车制造</option>
+                  <option value="机械行业">机械行业</option>
+                  <option value="电力行业">电力行业</option>
+                  <option value="房地产">房地产</option>
+                  <option value="医药制造">医药制造</option>
+                  <option value="有色金属">有色金属</option>
+                  <option value="食品行业">食品行业</option>
+                  <option value="商业百货">商业百货</option>
+                  <option value="农林牧渔">农林牧渔</option>
+                  <option value="煤炭行业">煤炭行业</option>
+                  <option value="传媒娱乐">传媒娱乐</option>
+                  <option value="家电行业">家电行业</option>
+                  <option value="环保行业">环保行业</option>
+                  <option value="建筑建材">建筑建材</option>
+                  <option value="银行">银行</option>
+                  <option value="证券行业">证券行业</option>
+                  <option value="保险行业">保险行业</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>排序方式</label>
+                <select id="filter-sort" class="filter-select">
+                  <option value="score">综合评分</option>
+                  <option value="zhangfu">涨跌幅</option>
+                  <option value="chengjiao">成交额</option>
+                  <option value="huanlv">换手率</option>
+                </select>
+              </div>
+              <div class="filter-item">
+                <label>&nbsp;</label>
+                <button class="auction-btn" onclick="runAuctionFilter()">🔍 开始筛选</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="dragon-section">
+          <div class="section-header">
+            <h3 class="dragon-section-title">竞价盲狙结果</h3>
+            <span class="result-count" id="auction-result-count">共 0 只符合条件</span>
+          </div>
+          <div class="auction-table-wrap">
+            <table class="auction-table">
+              <thead>
+                <tr>
+                  <th>排名</th>
+                  <th>代码</th>
+                  <th>名称</th>
+                  <th>所属板块</th>
+                  <th>竞价涨幅</th>
+                  <th>综合评分</th>
+                  <th>换手率</th>
+                  <th>流通市值</th>
+                  <th>成交额</th>
+                  <th>信号</th>
+                </tr>
+              </thead>
+              <tbody id="auction-tbody">
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab: 龙头锚点 ========== -->
+      <div class="dragon-tab-content hidden" id="dtab-anchor">
+        <div class="dragon-section">
+          <h3 class="dragon-section-title">👑 今日龙头锚点</h3>
+          <p class="section-desc">共振帮派内部标记 · 龙头 / 老二 / 老三 位次锚定</p>
+          <div class="anchor-gang-list" id="anchor-gang-list">
+          </div>
+        </div>
+      </div>
+
+      <!-- ========== Tab: 板块共振 ========== -->
+      <div class="dragon-tab-content hidden" id="dtab-resonance">
+        <div class="dragon-section">
+          <div class="section-header">
+            <h3 class="dragon-section-title">🔥 板块共振分析</h3>
+            <div class="resonance-stats">
+              <span class="res-stat up">上涨板块 <strong id="res-up-count">40</strong></span>
+              <span class="res-stat down">下跌板块 <strong id="res-down-count">9</strong></span>
+              <span class="res-stat">最强板块 <strong id="res-top-sector">船舶制造</strong></span>
+              <span class="res-stat">总成交额 <strong id="res-total-vol">7285亿</strong></span>
+            </div>
+          </div>
+          <div class="resonance-grid" id="resonance-grid">
           </div>
         </div>
       </div>
