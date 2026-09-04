@@ -1567,6 +1567,44 @@
     vertical-align: 1px;
   }
 
+  .phase-limitup-stocks {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    margin-bottom: 8px;
+    padding: 6px 8px;
+    background: rgba(239, 68, 68, 0.04);
+    border-radius: 6px;
+    border: 1px solid rgba(239, 68, 68, 0.1);
+  }
+  .limitup-stocks-label { font-size: 11px; color: var(--up); font-weight: 600; white-space: nowrap; padding-top: 2px; }
+  .limitup-stocks-list { display: flex; flex-wrap: wrap; gap: 6px; }
+  .limitup-stock-tag {
+    padding: 2px 6px 2px 8px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+    background: rgba(239,68,68,0.1);
+    color: var(--up);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+  }
+  .limitup-stock-tag .stock-name { font-weight: 600; }
+  .limitup-stock-tag .stock-time {
+    font-size: 9px;
+    opacity: 0.8;
+    font-weight: 400;
+    padding: 0 4px;
+    background: rgba(239,68,68,0.15);
+    border-radius: 3px;
+  }
+  .limitup-stock-tag .stock-sector {
+    font-size: 9px;
+    color: var(--muted);
+    font-weight: 400;
+  }
+
   .phase-note {
     font-size: 11px;
     color: var(--muted);
@@ -3689,6 +3727,10 @@
                 <div class="hotboards-label">热点板块 TOP6：</div>
                 <div class="hotboards-list" id="ten-hotboards">--</div>
               </div>
+              <div class="phase-limitup-stocks">
+                <div class="limitup-stocks-label">🏆 涨停个股（涨停时间）：</div>
+                <div class="limitup-stocks-list" id="ten-limitup-stocks">--</div>
+              </div>
               <div class="phase-note" id="ten-note">--</div>
             </div>
           </div>
@@ -3726,6 +3768,10 @@
                 <div class="hotboards-label">热点板块 TOP6：</div>
                 <div class="hotboards-list" id="noon-hotboards">--</div>
               </div>
+              <div class="phase-limitup-stocks">
+                <div class="limitup-stocks-label">🏆 涨停个股（涨停时间）：</div>
+                <div class="limitup-stocks-list" id="noon-limitup-stocks">--</div>
+              </div>
               <div class="phase-note" id="noon-note">--</div>
             </div>
           </div>
@@ -3762,6 +3808,10 @@
               <div class="phase-hotboards">
                 <div class="hotboards-label">热点板块 TOP6：</div>
                 <div class="hotboards-list" id="close-hotboards">--</div>
+              </div>
+              <div class="phase-limitup-stocks">
+                <div class="limitup-stocks-label">🏆 涨停个股（涨停时间）：</div>
+                <div class="limitup-stocks-list" id="close-limitup-stocks">--</div>
               </div>
               <div class="phase-note" id="close-note">--</div>
             </div>

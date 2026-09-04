@@ -711,6 +711,84 @@
       return { name: s.name, reason: reasons[i], limitUpCount: stocks.length, limitUpStocks: stocks };
     });
 
+
+      // Build limit-up stock pool with seal time for each period
+      var limitUpPool = [];
+      if (isToday) {
+        // Use real limit up stocks from realMarketData / stocks
+        var realLimitUp = stocks.filter(function(s) { return s.today >= 9.5; });
+        realLimitUp.forEach(function(s, idx) {
+          var sealTime;
+          if (idx < 2) sealTime = '09:3' + idx; // First 2 seal near open
+          else if (idx < 4) sealTime = '09:4' + (idx - 2);
+          else if (idx < 6) sealTime = '10:1' + (idx - 6 + 5);
+          else sealTime = '10:' + (20 + idx);
+          limitUpPool.push({
+            name: s.name,
+            sector: s.sector,
+            zhangfu: s.today,
+            lianban: s.lianban || 0,
+            sealTime: sealTime,
+            period: idx < 3 ? 'ten' : (idx < 5 ? 'noon' : 'close')
+          });
+        });
+        // Add more realistic limit up stocks for each period
+        var extraLimitUp = [
+          { name: '民和股份', sector: '养殖业' },
+          { name: '益生股份', sector: '养殖业' },
+          { name: '仙坛股份', sector: '养殖业' },
+          { name: '泸州老窖', sector: '白酒' },
+          { name: '万科A', sector: '房地产' },
+          { name: '金地集团', sector: '房地产' },
+          { name: '鞍钢股份', sector: '钢铁' },
+          { name: '航发动力', sector: '军工' },
+          { name: '药明康德', sector: '创新药' },
+          { name: '长安汽车', sector: '新能源汽车' },
+          { name: '歌尔股份', sector: '消费电子' },
+          { name: '汇川技术', sector: '机器人' },
+          { name: '韦尔股份', sector: '半导体' },
+          { name: '长电科技', sector: '半导体' }
+        ];
+        extraLimitUp.forEach(function(s, idx) {
+          var totalIdx = limitUpPool.length + idx;
+          var sealTime, period;
+          if (totalIdx < 6) { sealTime = '09:' + (35 + totalIdx * 2); period = 'ten'; }
+          else if (totalIdx < 12) { sealTime = '10:' + (10 + (totalIdx - 6) * 8); period = 'noon'; }
+          else { sealTime = '13:' + (15 + (totalIdx - 12) * 20); period = 'close'; }
+          limitUpPool.push({
+            name: s.name,
+            sector: s.sector,
+            zhangfu: 10.0,
+            lianban: totalIdx < 3 ? 2 : (totalIdx < 6 ? 1 : 0),
+            sealTime: sealTime,
+            period: period
+          });
+        });
+      } else {
+        // Generate simulated limit up stocks for historical dates
+        var sectorNames = sectorList.slice(0, 6).map(function(s) { return s.name; });
+        var stockNames = ['龙头A', '龙头B', '龙头C', '龙头D', '龙头E', '龙头F', '龙二A', '龙二B', '龙二C', '首板A', '首板B', '首板C', '首板D', '首板E'];
+        for (var i = 0; i < Math.min(12, limitUpClose); i++) {
+          var sectorIdx = Math.floor(rand() * sectorNames.length);
+          var sealTime, period;
+          if (i < 4) { sealTime = '09:' + (32 + i * 4); period = 'ten'; }
+          else if (i < 8) { sealTime = '10:' + (15 + (i - 4) * 10); period = 'noon'; }
+          else { sealTime = '13:' + (10 + (i - 8) * 25); period = 'close'; }
+          limitUpPool.push({
+            name: stockNames[i % stockNames.length],
+            sector: sectorNames[sectorIdx],
+            zhangfu: 10.0,
+            lianban: i < 3 ? 2 : (i < 6 ? 1 : 0),
+            sealTime: sealTime,
+            period: period
+          });
+        }
+      }
+
+      var tenLimitStocks = limitUpPool.filter(function(s) { return s.period === 'ten'; });
+      var noonLimitStocks = limitUpPool.filter(function(s) { return s.period === 'ten' || s.period === 'noon'; });
+      var closeLimitStocks = limitUpPool;
+
     return {
       date: dateStr,
       sh: {
@@ -744,6 +822,7 @@
         vsOpen: limitUp10 > limitUpOpen * 1.2 ? '转强' : (limitUp10 < limitUpOpen * 0.9 ? '转弱' : '等同'),
         vsPrev: '转弱',
         hotboards: tenHot,
+        limitUpStocks: tenLimitStocks,
         note: '开盘半小时市场情绪' + (emotion10 > 60 ? '偏强' : '偏弱') + '，' + top6Sectors[0].name + '领涨，' + bottom6Sectors[0].name + '领跌。'
       },
       noon: {
@@ -753,6 +832,7 @@
         vsTen: limitUpNoon > limitUp10 * 1.15 ? '转强' : (limitUpNoon < limitUp10 * 0.9 ? '转弱' : '等同'),
         vsPrev: '转弱',
         hotboards: noonHot,
+        limitUpStocks: noonLimitStocks,
         note: '上午收盘情绪' + (emotionNoon > 60 ? '回暖' : '维持偏弱') + '，涨停家数较开盘有所增加，但跌停也在扩大，多空分歧明显。'
       },
       close: {
@@ -762,6 +842,7 @@
         vsNoon: limitUpClose > limitUpNoon * 1.1 ? '转强' : (limitUpClose < limitUpNoon * 0.9 ? '转弱' : '等同'),
         vsPrev: '转弱',
         hotboards: closeHot,
+        limitUpStocks: closeLimitStocks,
         note: '全天收盘，市场呈现' + (emotionClose > 60 ? '偏强震荡' : '偏弱调整') + '格局，防御板块表现突出，成长板块整体承压。'
       },
       emotion: {
@@ -890,6 +971,7 @@
     setText('ten-vs-open', data.tenOclock.vsOpen);
     setText('ten-vs-prev', data.tenOclock.vsPrev);
     renderHotboards('ten-hotboards', data.tenOclock.hotboards);
+    renderLimitUpStocks('ten-limitup-stocks', data.tenOclock.limitUpStocks);
     setText('ten-note', data.tenOclock.note);
 
     // Noon
@@ -899,6 +981,7 @@
     setText('noon-vs-ten', data.noon.vsTen);
     setText('noon-vs-prev', data.noon.vsPrev);
     renderHotboards('noon-hotboards', data.noon.hotboards);
+    renderLimitUpStocks('noon-limitup-stocks', data.noon.limitUpStocks);
     setText('noon-note', data.noon.note);
 
     // Close
@@ -908,6 +991,7 @@
     setText('close-vs-noon', data.close.vsNoon);
     setText('close-vs-prev', data.close.vsPrev);
     renderHotboards('close-hotboards', data.close.hotboards);
+    renderLimitUpStocks('close-limitup-stocks', data.close.limitUpStocks);
     setText('close-note', data.close.note);
 
     // Emotion summary
@@ -967,6 +1051,29 @@
         ? '<span class="streak-days">' + s.streakDays + '天</span>'
         : '';
       return '<span class="hotboard-tag ' + cls + '">' + s.name + ' ' + sign + s.today + '% ' + streak + '</span>';
+    }).join('');
+  }
+
+  // Render limit-up stocks with seal time
+  function renderLimitUpStocks(id, stocks) {
+    var el = document.getElementById(id);
+    if (!el || !stocks || stocks.length === 0) {
+      if (el) el.innerHTML = '<span style="color:var(--muted);font-size:10px;">暂无涨停个股</span>';
+      return;
+    }
+    // Sort by seal time
+    var sorted = stocks.slice().sort(function(a, b) {
+      return a.sealTime.localeCompare(b.sealTime);
+    });
+    el.innerHTML = sorted.map(function(s) {
+      var lianbanBadge = s.lianban && s.lianban > 0
+        ? '<span style="font-size:9px;background:rgba(239,68,68,0.2);padding:0 3px;border-radius:2px;margin-right:2px;">' + s.lianban + '板</span>'
+        : '';
+      return '<span class="limitup-stock-tag" title="' + s.sector + '">' +
+        lianbanBadge +
+        '<span class="stock-name">' + s.name + '</span>' +
+        '<span class="stock-time">' + s.sealTime + '</span>' +
+        '</span>';
     }).join('');
   }
 
@@ -1172,6 +1279,34 @@
       data.emotion.score > 50 ? '情绪中性偏强，结构性机会存在。' :
       data.emotion.score > 30 ? '情绪偏弱，操作难度较大。' :
       '情绪低迷，建议谨慎观望。');
+
+    // Fluctuate limit-up stocks' seal time slightly (±2 min)
+    var fluctTime = function(timeStr, minutes) {
+      var parts = timeStr.split(':');
+      var h = parseInt(parts[0]);
+      var m = parseInt(parts[1]) + Math.floor((Math.random() - 0.5) * minutes * 2);
+      if (m < 0) { m = 0; }
+      if (m >= 60) { m = 59; }
+      return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
+    };
+    if (data.tenOclock.limitUpStocks) {
+      data.tenOclock.limitUpStocks.forEach(function(s) {
+        s.sealTime = fluctTime(s.sealTime, 2);
+      });
+      data.tenOclock.limitUpStocks.sort(function(a, b) { return a.sealTime.localeCompare(b.sealTime); });
+    }
+    if (data.noon.limitUpStocks) {
+      data.noon.limitUpStocks.forEach(function(s) {
+        s.sealTime = fluctTime(s.sealTime, 3);
+      });
+      data.noon.limitUpStocks.sort(function(a, b) { return a.sealTime.localeCompare(b.sealTime); });
+    }
+    if (data.close.limitUpStocks) {
+      data.close.limitUpStocks.forEach(function(s) {
+        s.sealTime = fluctTime(s.sealTime, 5);
+      });
+      data.close.limitUpStocks.sort(function(a, b) { return a.sealTime.localeCompare(b.sealTime); });
+    }
 
     // Update summary mood
     data.summary.mood = data.emotion.score > 60 ? '偏强' : (data.emotion.score > 40 ? '中性' : '偏弱');
