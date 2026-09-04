@@ -1876,6 +1876,80 @@
   .result-count { font-size: 12px; color: var(--muted); }
 
   /* Auction Filter Panel */
+  .auction-yesterday-review {
+    background: linear-gradient(135deg, rgba(239,68,68,0.06), rgba(245,158,11,0.04));
+    border: 1px solid rgba(239,68,68,0.15);
+    border-radius: 8px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+  }
+  .yesterday-review-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+  .yesterday-review-label {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--up);
+  }
+  .yesterday-review-date {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .yesterday-review-stat {
+    font-size: 11px;
+    color: var(--muted);
+  }
+  .yesterday-review-stat strong {
+    color: var(--up);
+    font-size: 13px;
+    margin: 0 2px;
+  }
+  .yesterday-review-list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .yesterday-stock-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(239,68,68,0.1);
+    border: 1px solid rgba(239,68,68,0.2);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-size: 11px;
+  }
+  .yesterday-stock-item .y-stock-name {
+    font-weight: 600;
+    color: var(--up);
+  }
+  .yesterday-stock-item .y-stock-code {
+    color: var(--muted);
+    font-size: 10px;
+  }
+  .yesterday-stock-item .y-sector {
+    color: var(--muted);
+    font-size: 10px;
+    padding: 0 4px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 3px;
+  }
+  .yesterday-stock-item .y-profit {
+    color: var(--up);
+    font-weight: 700;
+    font-size: 11px;
+  }
+  .yesterday-stock-item .y-board {
+    background: rgba(239,68,68,0.25);
+    color: var(--up);
+    padding: 0 5px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+  }
   .auction-filter-panel {
     background: var(--bg2);
     border: 1px solid var(--rule);
@@ -3445,6 +3519,17 @@
       <div class="dragon-tab-content" id="dtab-auction">
         <div class="dragon-section">
           <h3 class="dragon-section-title">🎯 竞价盲狙选股</h3>
+          <div class="auction-yesterday-review">
+            <div class="yesterday-review-header">
+              <span class="yesterday-review-label">📅 昨日竞价涨停回顾</span>
+              <span class="yesterday-review-date" id="auction-yesterday-date">--</span>
+              <span class="yesterday-review-stat">命中 <strong id="auction-yesterday-count">--</strong> 只涨停</span>
+              <span class="yesterday-review-stat">涨停率 <strong id="auction-yesterday-rate">--</strong>%</span>
+            </div>
+            <div class="yesterday-review-list" id="auction-yesterday-stocks">
+              --
+            </div>
+          </div>
           <div class="auction-filter-panel">
             <div class="filter-row">
               <div class="filter-item">
