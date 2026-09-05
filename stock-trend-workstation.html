@@ -106,13 +106,15 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 16px 24px;
+    gap: 16px;
+    padding: 12px 20px;
     background: var(--bg2);
     backdrop-filter: blur(12px);
     border: 1px solid var(--rule);
     border-radius: 16px;
     margin-bottom: 16px;
     position: relative;
+    flex-wrap: wrap;
   }
   .app-title {
     display: flex;
@@ -148,17 +150,20 @@
   /* Tabs */
   .app-tabs {
     display: flex;
-    gap: 4px;
+    gap: 2px;
     background: var(--bg3);
     padding: 4px;
     border-radius: 10px;
     border: 1px solid var(--rule);
+    flex: 1;
+    justify-content: center;
+    overflow-x: auto;
+    scrollbar-width: thin;
   }
+  .app-tabs::-webkit-scrollbar { height: 3px; }
+  .app-tabs::-webkit-scrollbar-thumb { background: var(--rule); border-radius: 2px; }
   /* 全局时间线状态 */
   .timeline-status {
-    position: absolute;
-    top: 16px;
-    right: 24px;
     display: flex;
     align-items: center;
     gap: 8px;
@@ -170,6 +175,8 @@
     font-weight: 600;
     cursor: help;
     transition: all 0.2s;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .timeline-status:hover { transform: scale(1.03); }
   .timeline-status .tl-ok { color: var(--success); }
@@ -189,7 +196,7 @@
   }
   .tl-fix-btn:hover { filter: brightness(1.1); }
   .tab-btn {
-    padding: 8px 20px;
+    padding: 8px 16px;
     border: none;
     background: transparent;
     color: var(--muted);
@@ -199,6 +206,8 @@
     cursor: pointer;
     transition: all 0.2s;
     font-family: inherit;
+    white-space: nowrap;
+    flex-shrink: 0;
   }
   .tab-btn:hover { color: var(--ink); }
   .tab-btn.active {
@@ -1781,7 +1790,10 @@
     .sentiment-grid { grid-template-columns: 1fr; }
   }
   @media (max-width: 600px) {
-    .app-header { flex-direction: column; gap: 12px; }
+    .app-header { flex-direction: column; align-items: stretch; gap: 10px; }
+    .app-title { justify-content: center; }
+    .app-tabs { justify-content: flex-start; }
+    .timeline-status { justify-content: center; }
     .market-stats { grid-template-columns: 1fr 1fr; }
     .stock-grid { grid-template-columns: 1fr; }
     .sentiment-dashboard { grid-template-columns: 1fr 1fr; }
