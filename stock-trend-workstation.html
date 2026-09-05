@@ -1069,15 +1069,15 @@
     padding: 16px 20px;
     margin-bottom: 16px;
   }
-  .sector-dist-wrap .panel-title { margin-bottom: 8px !important; }
-  .sector-dist-wrap .chart-figure { margin: 0 0 8px 0 !important; }
+  .sector-dist-wrap .panel-title { margin-bottom: 4px !important; }
+  .sector-dist-wrap .chart-figure { margin: 0 0 4px 0 !important; }
   .sector-dist-wrap .chart-figure figcaption {
-    font-size: 12px;
+    font-size: 11px;
     color: var(--muted);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     font-weight: 600;
   }
-  .sector-dist-wrap .chart-container.tall { min-height: 260px; }
+  .sector-dist-wrap .chart-container.tall { min-height: auto; height: 200px; }
   .sector-dist-wrap .limit-up-sector-groups { margin-top: 10px; }
   .sector-dist-wrap .reasoning-box { margin-top: 8px !important; }
 
@@ -3295,9 +3295,9 @@
             涨停板块分布
             <span class="panel-title-badge" style="background:rgba(16,185,129,0.1);color:var(--down)">农业消费主导</span>
           </div>
-          <figure class="chart-figure" style="margin:0;">
-            <figcaption>涨停股板块归属分布</figcaption>
-            <div id="chart-sector-dist" class="chart-container tall"></div>
+          <figure class="chart-figure" style="margin:0 0 4px 0;">
+            <figcaption style="margin-bottom:2px;">涨停股板块归属分布</figcaption>
+            <div id="chart-sector-dist" style="width:100%;height:200px;"></div>
           </figure>
 
           <!-- 涨停股按板块分类 -->
