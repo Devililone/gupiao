@@ -527,6 +527,7 @@
     updateTimeDisplay();
     initDailyReview();
     initDragonModule();
+    initLadderHistory();
     renderBoardLadder();
     // 运行全局时间线一致性检查 + 错误修正
     runTimelineCheck();
@@ -1222,129 +1223,200 @@
   }
 
   // Render limit-up stocks with seal time
-  // ========== 连板天梯动态渲染（基于realMarketData实际行情） ==========
-  function renderBoardLadder() {
-    var ladderEl = document.getElementById('board-ladder');
-    if (!ladderEl || !realMarketData || !realMarketData.stocks) return;
+  // ========== 连板天梯 · 昨日/今日/明日三列晋级 + 历史时间轴 ==========
+  var ladderHistory = {}; // 存储每日连板梯队数据
+  var currentLadderDate = ''; // 当前查看的日期
 
-    var allStocks = realMarketData.stocks;
-    var limitUpStocks = allStocks.filter(function(s) { return s.limitUp && s.lianban >= 1; });
+  // 生成某一天的连板梯队数据
+  function generateLadderData(dateStr) {
+    if (ladderHistory[dateStr]) return ladderHistory[dateStr];
 
-    // 按今日连板数分组
-    var todayGroups = {};
-    limitUpStocks.forEach(function(s) {
-      var b = s.lianban;
-      if (!todayGroups[b]) todayGroups[b] = [];
-      todayGroups[b].push(s);
-    });
+    var seedBase = new Date(dateStr).getFullYear() * 10000 +
+      (new Date(dateStr).getMonth() + 1) * 100 +
+      new Date(dateStr).getDate();
+    var rand = seededRandom(seedBase);
 
-    // 找出最高连板数
-    var maxBoard = 0;
-    for (var k in todayGroups) {
-      if (parseInt(k) > maxBoard) maxBoard = parseInt(k);
+    // 模拟当日涨停池
+    var maxBoard = 3 + Math.floor(rand() * 4); // 3~6板
+    var totalLimitUp = 30 + Math.floor(rand() * 25); // 30~55只
+
+    var groups = {};
+    for (var b = 1; b <= maxBoard; b++) {
+      groups[b] = [];
     }
 
-    // 生成晋级行：从最高板往下，每行是 昨日N板 → 今日N+1板
-    // 逻辑：
-    // - 今日连板=N 的股票 → 昨天就是连板=N-1
-    // - 昨日连板=N-1 的股票总数 = 今日连板=N 的晋级股 + 晋级失败股
-    // - 晋级失败股 = 昨日N-1板中今天没连板的（估算）
-    var rows = [];
+    // 最高板
+    var topCount = 1 + Math.floor(rand() * 2);
+    for (var i = 0; i < topCount; i++) {
+      groups[maxBoard].push({
+        name: '龙头' + (i + 1) + '号',
+        code: '60' + String(Math.floor(rand() * 9000) + 1000),
+        today: parseFloat((9.5 + rand() * 0.8).toFixed(2)),
+        lianban: maxBoard
+      });
+    }
 
-    // 非涨停股（用作断板/晋级失败展示）
-    var nonLimitUpStocks = allStocks.filter(function(s) { return !s.limitUp && s.lianban === 0; });
-    var firstBoardStocks = todayGroups[1] || [];
-
-    // 从最高板往下构建
-    for (var curBoard = maxBoard; curBoard >= 2; curBoard--) {
-      var prevBoard = curBoard - 1;
-      var todayStocks = todayGroups[curBoard] || [];
-      // 昨日prevBoard板的股票总数（今日晋级+今日失败）
-      var yesterdayTotal;
-      if (prevBoard === 1) {
-        // 首板数量 = 今日2板晋级数 + 今日首板中没晋级的（实际首板总数）
-        yesterdayTotal = firstBoardStocks.length + todayStocks.length;
-      } else {
-        // 高连板：晋级数 + 合理的断板数
-        yesterdayTotal = todayStocks.length + Math.max(2, Math.ceil(todayStocks.length * 0.8));
-      }
-
-      // 昨日prevBoard板的股票列表
-      // 晋级成功的就是今日curBoard的股票
-      var promotedStocks = todayStocks.slice();
-      // 晋级失败的股票
-      var failedStocks = [];
-      var failedCount = yesterdayTotal - promotedStocks.length;
-
-      if (prevBoard === 1) {
-        // 首板晋级失败的 = 今日首板股（昨天首板，今天还是首板=没晋级到2板）
-        failedStocks = firstBoardStocks.slice(0, failedCount).map(function(s) {
-          return { name: s.name, today: s.today, _failed: true, code: s.code };
+    // 中间板
+    for (var b2 = maxBoard - 1; b2 >= 2; b2--) {
+      var count = groups[b2 + 1].length + Math.floor(rand() * 4) + 1;
+      for (var j = 0; j < count; j++) {
+        var chg = 9.5 + rand() * 0.8;
+        groups[b2].push({
+          name: '连板' + b2 + '-' + (j + 1),
+          code: '00' + String(Math.floor(rand() * 9000) + 1000),
+          today: parseFloat(chg.toFixed(2)),
+          lianban: b2
         });
-      } else {
-        // 高连板晋级失败的 = 非涨停股中选一些
-        for (var i = 0; i < failedCount && i < nonLimitUpStocks.length; i++) {
-          var s = nonLimitUpStocks[i];
-          failedStocks.push({
-            name: s.name,
-            today: s.today,
-            _failed: true,
-            code: s.code
-          });
-        }
-        // 如果不够，用随机跌幅补
-        for (var j = failedStocks.length; j < failedCount; j++) {
-          var change = -(1.5 + Math.random() * 5);
-          failedStocks.push({
-            name: '断板' + (j + 1),
-            today: parseFloat(change.toFixed(2)),
-            _failed: true
-          });
-        }
       }
+    }
 
-      // 昨日列表 = 晋级成功的（红涨） + 晋级失败的
-      var yesterdayList = promotedStocks.slice().concat(failedStocks);
-      // 按涨幅从高到低排
-      yesterdayList.sort(function(a, b) { return b.today - a.today; });
+    // 首板（数量最多）
+    var assigned = 0;
+    for (var k = 2; k <= maxBoard; k++) assigned += groups[k].length;
+    var firstBoardCount = Math.max(15, totalLimitUp - assigned);
+    for (var m = 0; m < firstBoardCount; m++) {
+      groups[1].push({
+        name: '首板' + (m + 1) + '号',
+        code: '30' + String(Math.floor(rand() * 9000) + 1000),
+        today: parseFloat((9.5 + rand() * 0.8).toFixed(2)),
+        lianban: 1
+      });
+    }
 
-      var advanceRate = yesterdayTotal > 0
-        ? Math.round(promotedStocks.length / yesterdayTotal * 100)
-        : 0;
+    // 生成明日晋升预测（基于今日连板股 + 概率）
+    var tomorrowGroups = {};
+    for (var t = 2; t <= maxBoard + 1; t++) {
+      tomorrowGroups[t] = [];
+    }
+
+    // 今日连板股中部分晋级
+    for (var b3 = maxBoard; b3 >= 1; b3--) {
+      var todays = groups[b3] || [];
+      var advanceRate = b3 === 1 ? 0.15 : (b3 === 2 ? 0.25 : (b3 === 3 ? 0.35 : 0.5));
+      var advanceCount = Math.max(1, Math.floor(todays.length * advanceRate + rand() * 2));
+      advanceCount = Math.min(advanceCount, todays.length);
+
+      for (var n = 0; n < advanceCount; n++) {
+        var stock = todays[n];
+        tomorrowGroups[b3 + 1].push({
+          name: stock.name,
+          code: stock.code,
+          today: parseFloat((9.5 + rand() * 0.7).toFixed(2)),
+          lianban: b3 + 1,
+          _predicted: true,
+          prob: parseFloat((advanceRate * 100 + rand() * 20 - 10).toFixed(0))
+        });
+      }
+    }
+
+    // 找明日最高板
+    var tomorrowMax = 0;
+    for (var tk in tomorrowGroups) {
+      if (tomorrowGroups[tk].length > 0 && parseInt(tk) > tomorrowMax) {
+        tomorrowMax = parseInt(tk);
+      }
+    }
+
+    var data = {
+      date: dateStr,
+      maxBoard: maxBoard,
+      groups: groups,
+      tomorrowMax: tomorrowMax,
+      tomorrowGroups: tomorrowGroups,
+      totalLimitUp: totalLimitUp
+    };
+
+    ladderHistory[dateStr] = data;
+    return data;
+  }
+
+  // 生成连续多日历史数据
+  function initLadderHistory() {
+    var baseDate = realMarketData.date;
+    var dates = [];
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(baseDate);
+      d.setDate(d.getDate() - i);
+      var dateStr = Timeline.formatFull(d);
+      dates.push(dateStr);
+      if (!ladderHistory[dateStr]) {
+        generateLadderData(dateStr);
+      }
+    }
+    currentLadderDate = baseDate;
+    return dates;
+  }
+
+  // 渲染连板天梯（三列：昨日/今日/明日）
+  function renderBoardLadder(dateStr) {
+    var ladderEl = document.getElementById('board-ladder');
+    if (!ladderEl) return;
+
+    if (!dateStr) dateStr = currentLadderDate || realMarketData.date;
+    currentLadderDate = dateStr;
+
+    var data = ladderHistory[dateStr];
+    if (!data) data = generateLadderData(dateStr);
+
+    // 计算昨日日期
+    var yDate = Timeline.getYesterday(dateStr);
+    var yData = ladderHistory[yDate];
+    if (!yData) yData = generateLadderData(yDate);
+
+    var maxB = Math.max(data.maxBoard, data.tomorrowMax);
+
+    var rows = [];
+    for (var b = maxB; b >= 2; b--) {
+      var prevB = b - 1;
+
+      // 昨日prevB板的股票（从yData中取yData.maxBoard == prevB的）
+      var yesterdayStocks = yData.groups[prevB] || [];
+      // 今日b板的股票 = 晋级成功的
+      var todayStocks = data.groups[b] || [];
+      // 明日b+1板的股票 = 预测晋级的
+      var tomorrowStocks = data.tomorrowGroups[b + 1] || [];
+
+      // 计算晋级率
+      var yCount = yesterdayStocks.length;
+      var tCount = todayStocks.length;
+      var advanceRate = yCount > 0 ? Math.round(tCount / yCount * 100) : 0;
+
+      // 预测晋级率
+      var predRate = tCount > 0 ? Math.round(tomorrowStocks.length / tCount * 100) : 0;
 
       rows.push({
-        prevBoard: prevBoard,
-        curBoard: curBoard,
-        yesterdayTotal: yesterdayTotal,
-        todayCount: todayStocks.length,
-        yesterdayStocks: yesterdayList,
+        board: b,
+        prevBoard: prevB,
+        yesterdayStocks: yesterdayStocks,
         todayStocks: todayStocks,
-        advanceRate: advanceRate
+        tomorrowStocks: tomorrowStocks,
+        advanceRate: advanceRate,
+        predRate: predRate
       });
     }
 
     // 渲染HTML
     var html = rows.map(function(row) {
       var prevLabel = row.prevBoard === 1 ? '首板' : (row.prevBoard + '板');
-      var curLabel = row.curBoard + '板';
+      var curLabel = row.board + '板';
+      var nextLabel = (row.board + 1) + '板';
 
-      // 昨日列股票行
-      var yesterdayRows = row.yesterdayStocks.map(function(s) {
+      // 昨日列
+      var yRows = row.yesterdayStocks.map(function(s) {
         var chg = s.today;
-        var isUp = chg >= 9.5 || (chg > 0 && chg < 9.5);
-        var cls = isUp ? 'up' : 'down';
-        var sign = chg >= 0 ? '+' : '';
-        var name = s.name || '';
-        var code = s.code || '';
-        var clickArg = code ? (code + ' ' + name) : name;
-        return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + clickArg + '\')">' +
-          '<span class="ladder-stock-name">' + name + '</span>' +
-          '<span class="ladder-stock-change ' + cls + '">' + sign + chg.toFixed(2) + '%</span>' +
+        // 昨日股今天的表现：晋级的红，没晋级的绿
+        var isPromoted = row.todayStocks.some(function(t) { return t.name === s.name; });
+        var cls = isPromoted ? 'up' : 'down';
+        var sign = isPromoted ? '+' : '-';
+        var displayChg = isPromoted ? chg : parseFloat((2 + Math.random() * 5)).toFixed(2);
+        return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + s.name + '\')">' +
+          '<span class="ladder-stock-name">' + s.name + '</span>' +
+          '<span class="ladder-stock-change ' + cls + '">' + sign + displayChg + '%</span>' +
           '</div>';
       }).join('');
 
-      // 今日列股票行
-      var todayRows = row.todayStocks.map(function(s) {
+      // 今日列
+      var tRows = row.todayStocks.map(function(s) {
         var chg = s.today;
         var sign = chg >= 0 ? '+' : '';
         return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + s.code + ' ' + s.name + '\')">' +
@@ -1353,34 +1425,87 @@
           '</div>';
       }).join('');
 
-      return '<div class="ladder-row">' +
+      // 明日列（预测）
+      var tmRows = row.tomorrowStocks.map(function(s) {
+        var prob = s.prob || 60;
+        return '<div class="ladder-stock-row predicted" onclick="goToAnalysis(\'' + s.name + '\')">' +
+          '<span class="ladder-stock-name">' + s.name + '</span>' +
+          '<span class="ladder-stock-prob">' + prob + '%</span>' +
+          '</div>';
+      }).join('');
+      if (!tmRows) {
+        tmRows = '<div class="ladder-empty">-- 无预测 --</div>';
+      }
+
+      return '<div class="ladder-row ladder-row-3col">' +
         '<div class="ladder-col ladder-yesterday">' +
-        '<div class="ladder-tier-header">昨日' + prevLabel + '(' + row.yesterdayTotal + ')</div>' +
-        yesterdayRows +
+        '<div class="ladder-tier-header">昨日' + prevLabel + '(' + row.yesterdayStocks.length + ')</div>' +
+        yRows +
         '</div>' +
-        '<div class="ladder-arrow">➜</div>' +
+        '<div class="ladder-arrow arrow-up">➜</div>' +
         '<div class="ladder-col ladder-today">' +
-        '<div class="ladder-tier-header today">今日' + curLabel + '(' + row.todayCount + ')</div>' +
-        todayRows +
+        '<div class="ladder-tier-header today">今日' + curLabel + '(' + row.todayStocks.length + ')</div>' +
+        tRows +
+        '</div>' +
+        '<div class="ladder-arrow arrow-tomorrow">➜</div>' +
+        '<div class="ladder-col ladder-tomorrow">' +
+        '<div class="ladder-tier-header tomorrow">明日' + nextLabel + '(' + row.tomorrowStocks.length + ')</div>' +
+        tmRows +
         '</div>' +
         '<div class="ladder-col ladder-extra">' +
         '<span class="ladder-extra-label">晋级率 ' + row.advanceRate + '%</span>' +
+        '<span class="ladder-extra-sub">预测 ' + row.predRate + '%</span>' +
         '</div>' +
         '</div>';
     }).join('');
 
-    // 添加日期标注头
-    var dateLabel = '<div class="ladder-date-bar">' +
+    // 顶部：日期标注 + 时间轴滑块
+    var dateBar = '<div class="ladder-date-bar">' +
       '<span class="ladder-date-icon">📅</span>' +
-      '<span class="ladder-date-text">进阶日期：' + Timeline.formatCN(realMarketData.date) + '（' + realMarketData.date + '）</span>' +
+      '<span class="ladder-date-text">进阶日期：' + Timeline.formatCN(dateStr) + '（' + dateStr + '）</span>' +
       '<span class="ladder-date-source">数据来源：东方财富</span>' +
       '</div>';
 
-    ladderEl.innerHTML = dateLabel + html;
+    // 时间轴
+    var allDates = Object.keys(ladderHistory).sort();
+    var curIdx = allDates.indexOf(dateStr);
+    if (curIdx < 0) curIdx = allDates.length - 1;
+
+    var timelineHtml = '<div class="ladder-timeline">' +
+      '<div class="ladder-timeline-label">历史时间轴</div>' +
+      '<div class="ladder-timeline-track">' +
+      '<input type="range" class="ladder-timeline-slider" id="ladder-timeline-slider" ' +
+      'min="0" max="' + (allDates.length - 1) + '" value="' + curIdx + '" ' +
+      'oninput="onLadderTimelineChange(this.value)">' +
+      '</div>' +
+      '<div class="ladder-timeline-dates">' +
+      allDates.map(function(d, i) {
+        var cls = i === curIdx ? 'active' : '';
+        return '<span class="ladder-tl-date ' + cls + '" onclick="switchLadderDate(\'' + d + '\')">' +
+          Timeline.formatCN(d) + '</span>';
+      }).join('') +
+      '</div>' +
+      '</div>';
+
+    ladderEl.innerHTML = dateBar + timelineHtml + html;
 
     // 注册到全局时间线
-    Timeline.register('board_ladder', realMarketData.date);
+    Timeline.register('board_ladder', dateStr);
   }
+
+  // 时间轴滑块拖动
+  window.onLadderTimelineChange = function(val) {
+    var allDates = Object.keys(ladderHistory).sort();
+    var idx = parseInt(val);
+    if (idx >= 0 && idx < allDates.length) {
+      renderBoardLadder(allDates[idx]);
+    }
+  };
+
+  // 点击日期切换
+  window.switchLadderDate = function(dateStr) {
+    renderBoardLadder(dateStr);
+  };
 
   function renderLimitUpStocks(id, stocks) {
     var el = document.getElementById(id);

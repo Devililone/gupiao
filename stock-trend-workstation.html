@@ -1123,6 +1123,155 @@
     color: var(--muted);
   }
 
+  /* 三列连板梯队样式 */
+  .ladder-row-3col {
+    display: grid;
+    grid-template-columns: 1fr auto 1fr auto 1fr 70px;
+    align-items: stretch;
+    gap: 0;
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .ladder-row-3col .ladder-col {
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .ladder-col.ladder-tomorrow {
+    background: linear-gradient(135deg, rgba(59,130,246,0.06), rgba(99,102,241,0.04));
+  }
+  .ladder-tier-header.tomorrow {
+    background: linear-gradient(135deg, rgba(59,130,246,0.15), rgba(99,102,241,0.12));
+    color: var(--accent);
+  }
+  .ladder-arrow.arrow-tomorrow {
+    flex: 0 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--accent);
+    font-size: 14px;
+    font-weight: 700;
+    background: rgba(59,130,246,0.04);
+  }
+  .ladder-stock-row.predicted {
+    background: rgba(59,130,246,0.04);
+  }
+  .ladder-stock-row.predicted:hover {
+    background: rgba(59,130,246,0.1);
+  }
+  .ladder-stock-prob {
+    display: inline-block;
+    padding: 1px 5px;
+    background: rgba(59,130,246,0.2);
+    color: var(--accent);
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+  }
+  .ladder-empty {
+    text-align: center;
+    padding: 10px 8px;
+    color: var(--muted);
+    font-size: 11px;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .ladder-extra-sub {
+    font-size: 10px;
+    color: var(--muted);
+    display: block;
+    margin-top: 4px;
+  }
+
+  /* 历史时间轴 */
+  .ladder-timeline {
+    margin: 4px 0 10px 0;
+    padding: 10px 14px;
+    background: var(--bg3);
+    border: 1px solid var(--rule);
+    border-radius: 8px;
+  }
+  .ladder-timeline-label {
+    font-size: 12px;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .ladder-timeline-label::before {
+    content: '📊';
+    font-size: 13px;
+  }
+  .ladder-timeline-track {
+    margin-bottom: 8px;
+    padding: 4px 0;
+  }
+  .ladder-timeline-slider {
+    width: 100%;
+    height: 6px;
+    -webkit-appearance: none;
+    appearance: none;
+    background: var(--rule);
+    border-radius: 3px;
+    outline: none;
+    cursor: pointer;
+  }
+  .ladder-timeline-slider::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    appearance: none;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    cursor: pointer;
+    box-shadow: 0 2px 6px rgba(99,102,241,0.4);
+    transition: transform 0.15s;
+  }
+  .ladder-timeline-slider::-webkit-slider-thumb:hover {
+    transform: scale(1.15);
+  }
+  .ladder-timeline-slider::-moz-range-thumb {
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--accent), #6366f1);
+    cursor: pointer;
+    border: none;
+    box-shadow: 0 2px 6px rgba(99,102,241,0.4);
+  }
+  .ladder-timeline-dates {
+    display: flex;
+    justify-content: space-between;
+    font-size: 11px;
+    color: var(--muted);
+    flex-wrap: wrap;
+    gap: 4px;
+  }
+  .ladder-tl-date {
+    cursor: pointer;
+    padding: 3px 8px;
+    border-radius: 4px;
+    transition: all 0.2s;
+    white-space: nowrap;
+  }
+  .ladder-tl-date:hover {
+    background: rgba(99,102,241,0.1);
+    color: var(--accent);
+  }
+  .ladder-tl-date.active {
+    background: var(--accent);
+    color: white;
+    font-weight: 600;
+  }
+
   /* Sector Distribution */
   .sector-dist-wrap {
     background: var(--bg2);
