@@ -1,5 +1,63 @@
 // assets/app.js
 (function() {
+  // ==================== 全局时间线管理器 ====================
+  // 统一管理全工作台的数据日期，确保所有模块对齐同一时间线
+  var Timeline = {
+    currentDate: '2026-09-04',
+    source: 'eastmoney',
+    sources: {},
+
+    // 注册各模块的数据日期
+    register: function(moduleName, dateStr) {
+      this.sources[moduleName] = dateStr;
+    },
+
+    // 检测所有模块日期是否一致
+    checkConsistency: function() {
+      var dates = {};
+      for (var mod in this.sources) {
+        var d = this.sources[mod];
+        if (!dates[d]) dates[d] = [];
+        dates[d].push(mod);
+      }
+      var dateKeys = Object.keys(dates);
+      if (dateKeys.length <= 1) {
+        return { consistent: true, dates: dates };
+      }
+      return { consistent: false, dates: dates };
+    },
+
+    // 自动修正：将所有模块对齐到主日期（realMarketData.date）
+    autoFix: function() {
+      var mainDate = this.sources['market_main'] || this.currentDate;
+      this.currentDate = mainDate;
+      // 同步到每日复盘
+      if (typeof currentDailyDate !== 'undefined') {
+        currentDailyDate = mainDate;
+      }
+      return mainDate;
+    },
+
+    // 格式化日期显示
+    formatCN: function(dateStr) {
+      var d = new Date(dateStr);
+      return (d.getMonth() + 1) + '月' + d.getDate() + '日';
+    },
+
+    formatFull: function(dateStr) {
+      var d = new Date(dateStr);
+      return d.getFullYear() + '-' +
+        String(d.getMonth() + 1).padStart(2, '0') + '-' +
+        String(d.getDate()).padStart(2, '0');
+    },
+
+    getYesterday: function(dateStr) {
+      var d = new Date(dateStr);
+      d.setDate(d.getDate() - 1);
+      return this.formatFull(d);
+    }
+  };
+
   // ==================== Real Data from Eastmoney (2026-09-04) ====================
   var sectors = [
     { name: '养殖业', today: 5.30, d5: 12.5, d20: 18.3, upCount: 58, total: 64, volChange: '+280%', strongDays: 3, trend: 'strong', trendText: '持续强势', limitUp: 8, volume: 223.4, icon: '🌾' },
@@ -470,7 +528,52 @@
     initDailyReview();
     initDragonModule();
     renderBoardLadder();
+    // 运行全局时间线一致性检查 + 错误修正
+    runTimelineCheck();
   });
+
+  // ========== 全局时间线一致性检查与错误修正 ==========
+  function runTimelineCheck() {
+    var result = Timeline.checkConsistency();
+    var statusEl = document.getElementById('timeline-status');
+    if (!statusEl) return;
+
+    if (result.consistent) {
+      var date = Object.keys(result.dates)[0];
+      statusEl.innerHTML = '<span class="tl-ok">✓ 时间线一致</span>' +
+        '<span class="tl-date">' + Timeline.formatCN(date) + '</span>';
+      statusEl.title = '所有模块数据日期对齐：' + date;
+    } else {
+      // 日期不一致，显示警告并提供修正按钮
+      var modList = [];
+      for (var d in result.dates) {
+        modList.push(d + ': ' + result.dates[d].join('、'));
+      }
+      statusEl.innerHTML = '<span class="tl-warn">⚠ 时间线不一致</span>' +
+        '<button class="tl-fix-btn" onclick="fixTimeline()">一键修正</button>';
+      statusEl.title = modList.join(' | ');
+    }
+  }
+
+  // 一键修正时间线
+  window.fixTimeline = function() {
+    var mainDate = Timeline.autoFix();
+    // 重新渲染每日复盘到对齐日期
+    if (dailyData && dailyData[mainDate]) {
+      renderDailyReview(mainDate);
+      Timeline.register('daily_review', mainDate);
+    }
+    // 重新渲染连板梯队
+    renderBoardLadder();
+    // 重新检查
+    runTimelineCheck();
+
+    var statusEl = document.getElementById('timeline-status');
+    if (statusEl) {
+      statusEl.innerHTML = '<span class="tl-ok">✓ 已修正</span>' +
+        '<span class="tl-date">对齐至 ' + Timeline.formatCN(mainDate) + '</span>';
+    }
+  };
 
   // ==================== Daily Review Module ====================
   var dailyData = {};
@@ -568,6 +671,11 @@
       { code: '601398', name: '工商银行', price: 8.13, today: 0.37, sector: '银行', lianban: 0, boardType: '趋势', limitUp: false, reason: '银行龙头' }
     ]
   };
+
+  // 注册主行情数据日期到全局时间线
+  Timeline.register('market_main', realMarketData.date);
+  Timeline.register('sectors', realMarketData.date);
+  Timeline.register('stocks', realMarketData.date);
 
   // Generate daily review data - uses real data for today, simulated for history
   function generateDailyData(dateStr) {
@@ -1261,7 +1369,17 @@
         '</div>';
     }).join('');
 
-    ladderEl.innerHTML = html;
+    // 添加日期标注头
+    var dateLabel = '<div class="ladder-date-bar">' +
+      '<span class="ladder-date-icon">📅</span>' +
+      '<span class="ladder-date-text">进阶日期：' + Timeline.formatCN(realMarketData.date) + '（' + realMarketData.date + '）</span>' +
+      '<span class="ladder-date-source">数据来源：东方财富</span>' +
+      '</div>';
+
+    ladderEl.innerHTML = dateLabel + html;
+
+    // 注册到全局时间线
+    Timeline.register('board_ladder', realMarketData.date);
   }
 
   function renderLimitUpStocks(id, stocks) {
@@ -1535,6 +1653,8 @@
       dailyData[d] = generateDailyData(d);
     });
     renderDailyReview(currentDailyDate);
+    // 注册到全局时间线
+    Timeline.register('daily_review', currentDailyDate);
   }
 
   // Expose for charts.js to call
@@ -2181,6 +2301,8 @@
       var now = new Date();
       timeEl.textContent = '更新于 ' + formatDate(now);
     }
+    // 注册到全局时间线
+    Timeline.register('dragon_sniper', realMarketData.date);
   }
 
   // Expose

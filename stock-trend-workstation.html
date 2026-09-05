@@ -112,6 +112,7 @@
     border: 1px solid var(--rule);
     border-radius: 16px;
     margin-bottom: 16px;
+    position: relative;
   }
   .app-title {
     display: flex;
@@ -153,6 +154,40 @@
     border-radius: 10px;
     border: 1px solid var(--rule);
   }
+  /* 全局时间线状态 */
+  .timeline-status {
+    position: absolute;
+    top: 16px;
+    right: 24px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 12px;
+    background: rgba(16,185,129,0.08);
+    border: 1px solid rgba(16,185,129,0.2);
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: help;
+    transition: all 0.2s;
+  }
+  .timeline-status:hover { transform: scale(1.03); }
+  .timeline-status .tl-ok { color: var(--success); }
+  .timeline-status .tl-warn { color: var(--warning); }
+  .timeline-status .tl-date { color: var(--muted); font-weight: 400; }
+  .tl-fix-btn {
+    margin-left: 4px;
+    padding: 2px 8px;
+    border: none;
+    background: var(--warning);
+    color: white;
+    border-radius: 10px;
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    font-family: inherit;
+  }
+  .tl-fix-btn:hover { filter: brightness(1.1); }
   .tab-btn {
     padding: 8px 20px;
     border: none;
@@ -1064,6 +1099,28 @@
     color: var(--muted);
     padding: 4px;
     background: rgba(148,163,184,0.05);
+  }
+  /* 进阶日期栏 */
+  .ladder-date-bar {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.08), rgba(59,130,246,0.05));
+    border: 1px solid rgba(99,102,241,0.15);
+    border-radius: 8px;
+    margin-bottom: 8px;
+    font-size: 12px;
+  }
+  .ladder-date-icon { font-size: 14px; }
+  .ladder-date-text {
+    font-weight: 700;
+    color: var(--accent);
+  }
+  .ladder-date-source {
+    margin-left: auto;
+    font-size: 11px;
+    color: var(--muted);
   }
 
   /* Sector Distribution */
@@ -2369,6 +2426,10 @@
       <button class="tab-btn" data-tab="rotation">板块轮动</button>
       <button class="tab-btn" data-tab="dragon">龙头狙击</button>
       <button class="tab-btn" data-tab="daily">每日复盘</button>
+    </div>
+    <div id="timeline-status" class="timeline-status" title="全局时间线一致性检查">
+      <span class="tl-ok">✓ 时间线一致</span>
+      <span class="tl-date">--</span>
     </div>
   </header>
 
