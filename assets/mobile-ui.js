@@ -111,23 +111,25 @@ var MobileUI = (function() {
       '    display: flex;',
       '    flex-direction: column;',
       '    align-items: center;',
+      '    justify-content: center;',
       '    gap: 2px;',
       '    padding: 4px 0;',
-      '    font-size: 10px;',
+      '    font-size: 11px;',
+      '    font-weight: 600;',
       '    color: var(--muted);',
       '    cursor: pointer;',
       '    transition: color 0.2s;',
       '    -webkit-tap-highlight-color: transparent;',
       '  }',
-      '  .mobile-bottom-nav .nav-item .nav-icon {',
-      '    font-size: 18px;',
-      '    line-height: 1;',
+      '  .mobile-bottom-nav .nav-item .nav-label {',
+      '    line-height: 1.2;',
+      '    white-space: nowrap;',
       '  }',
       '  .mobile-bottom-nav .nav-item.active {',
       '    color: var(--accent);',
       '  }',
-      '  .mobile-bottom-nav .nav-item.active .nav-icon {',
-      '    transform: scale(1.1);',
+      '  .mobile-bottom-nav .nav-item.active .nav-label {',
+      '    transform: scale(1.08);',
       '  }',
       '',
       // 下拉刷新
@@ -216,8 +218,7 @@ var MobileUI = (function() {
       // 横屏适配
       '@media (max-width: 768px) and (orientation: landscape) {',
       '  .mobile-bottom-nav { height: 44px; }',
-      '  .mobile-bottom-nav .nav-item .nav-icon { font-size: 16px; }',
-      '  .mobile-bottom-nav .nav-item { font-size: 9px; }',
+      '  .mobile-bottom-nav .nav-item { font-size: 10px; }',
       '}'
     ].join('\n');
     document.head.appendChild(style);
@@ -229,20 +230,20 @@ var MobileUI = (function() {
     bottomNavCreated = true;
 
     var tabs = [
-      { id: 'funnel',    icon: '\\u2699',  label: '筛选' },
-      { id: 'analysis',  icon: '\\u1f50d', label: '分析' },
-      { id: 'sentiment', icon: '\\u1f525', label: '情绪' },
-      { id: 'rotation', icon: '\\u1f504', label: '轮动' },
-      { id: 'dragon',    icon: '\\u1f409', label: '狙击' },
-      { id: 'daily',     icon: '\\u1f4ca', label: '复盘' }
+      { id: 'funnel',    label: '筛选' },
+      { id: 'analysis',  label: '分析' },
+      { id: 'sentiment', label: '情绪' },
+      { id: 'rotation',  label: '轮动' },
+      { id: 'dragon',    label: '狙击' },
+      { id: 'daily',     label: '复盘' },
+      { id: 'tactic',    label: '战法' }
     ];
 
     var nav = document.createElement('nav');
     nav.className = 'mobile-bottom-nav';
     nav.innerHTML = tabs.map(function(t) {
       return '<div class="nav-item" data-tab="' + t.id + '">' +
-        '<span class="nav-icon">' + t.icon + '</span>' +
-        '<span>' + t.label + '</span>' +
+        '<span class="nav-label">' + t.label + '</span>' +
       '</div>';
     }).join('');
 
@@ -377,7 +378,7 @@ var MobileUI = (function() {
     // 左右滑动切换Tab
     var touchStartX = 0;
     var touchStartY = 0;
-    var tabOrder = ['funnel', 'analysis', 'sentiment', 'rotation', 'dragon', 'daily'];
+    var tabOrder = ['funnel', 'analysis', 'sentiment', 'rotation', 'dragon', 'daily', 'tactic'];
 
     document.addEventListener('touchstart', function(e) {
       touchStartX = e.touches[0].clientX;
