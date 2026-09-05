@@ -716,6 +716,11 @@
         refreshDragonModule();
       }
 
+      // 刷新战法选股结果
+      if (typeof refreshTacticModule === 'function') {
+        refreshTacticModule();
+      }
+
       // 刷新连板梯队并持久化到数据库
       if (typeof renderBoardLadder === 'function' && typeof buildLadderFromRealData === 'function') {
         var newLadder = buildLadderFromRealData();
@@ -821,6 +826,7 @@
     initDragonModule();
     initLadderHistory();
     renderBoardLadder();
+    initTacticModule();
     // 运行全局时间线一致性检查 + 错误修正
     runTimelineCheck();
   });
@@ -3146,5 +3152,624 @@
   window.renderAnchorGangs = renderAnchorGangs;
   window.renderResonanceSectors = renderResonanceSectors;
   window.dragonData = dragonData;
+
+  // ==================== 战法选股模块 ====================
+  // 可选的条件字段定义
+  var TACTIC_FIELDS = [
+    { key: 'today', label: '今日涨幅', unit: '%', type: 'number' },
+    { key: 'd5', label: '5日涨幅', unit: '%', type: 'number' },
+    { key: 'd10', label: '10日涨幅', unit: '%', type: 'number' },
+    { key: 'd20', label: '20日涨幅', unit: '%', type: 'number' },
+    { key: 'lianban', label: '连板数', unit: '板', type: 'number' },
+    { key: 'price', label: '股价', unit: '元', type: 'number' },
+    { key: 'sector', label: '所属板块', unit: '', type: 'text' },
+    { key: 'turnover', label: '换手率', unit: '%', type: 'number' },
+    { key: 'marketCap', label: '流通市值', unit: '亿', type: 'number' },
+    { key: 'limitUp', label: '是否涨停', unit: '', type: 'bool' },
+    { key: 'category', label: '股票类型', unit: '', type: 'text' }
+  ];
+
+  // 可选操作符
+  var TACTIC_OPS = [
+    { key: 'gt', label: '大于', symbol: '>' },
+    { key: 'gte', label: '大于等于', symbol: '≥' },
+    { key: 'lt', label: '小于', symbol: '<' },
+    { key: 'lte', label: '小于等于', symbol: '≤' },
+    { key: 'eq', label: '等于', symbol: '=' },
+    { key: 'neq', label: '不等于', symbol: '≠' },
+    { key: 'contains', label: '包含', symbol: '∋' }
+  ];
+
+  // 默认战法
+  var DEFAULT_TACTICS = [
+    {
+      id: 'tactic_lianban',
+      name: '连板晋级战法',
+      icon: '🚀',
+      desc: '捕捉连板股晋级机会，聚焦高连板龙头',
+      conditions: [
+        { field: 'lianban', op: 'gte', value: '2' },
+        { field: 'today', op: 'gt', value: '5' }
+      ]
+    },
+    {
+      id: 'tactic_first_board',
+      name: '首板涨停战法',
+      icon: '⚡',
+      desc: '首板起爆，捕捉板块启动信号',
+      conditions: [
+        { field: 'lianban', op: 'eq', value: '1' },
+        { field: 'limitUp', op: 'eq', value: 'true' }
+      ]
+    },
+    {
+      id: 'tactic_trend_breakout',
+      name: '趋势突破战法',
+      icon: '📈',
+      desc: '均线多头排列，突破前期高点',
+      conditions: [
+        { field: 'd5', op: 'gt', value: '5' },
+        { field: 'd20', op: 'gt', value: '15' },
+        { field: 'today', op: 'gt', value: '2' }
+      ]
+    },
+    {
+      id: 'tactic_dip_buy',
+      name: '低吸反包战法',
+      icon: '💎',
+      desc: '强势股回调低吸，博弈反包行情',
+      conditions: [
+        { field: 'd5', op: 'gt', value: '10' },
+        { field: 'today', op: 'lt', value: '-2' }
+      ]
+    },
+    {
+      id: 'tactic_volume_break',
+      name: '放量突破战法',
+      icon: '🔥',
+      desc: '成交量放大配合价格突破',
+      conditions: [
+        { field: 'today', op: 'gt', value: '3' },
+        { field: 'd5', op: 'gt', value: '0' }
+      ]
+    }
+  ];
+
+  // 战法状态
+  var tactics = [];
+  var currentTacticId = null;
+  var editingTacticId = null;
+  var selectedIcon = '🚀';
+  var conditionRowCount = 0;
+  var undoStack = []; // 撤回栈
+  var MAX_UNDO = 10;
+
+  // 加载战法（从数据库）
+  function loadTactics() {
+    var saved = MarketDB.getModule(realMarketData.date, 'tactics');
+    if (saved && saved.list && saved.list.length > 0) {
+      tactics = saved.list;
+    } else {
+      // 使用默认战法并保存
+      tactics = JSON.parse(JSON.stringify(DEFAULT_TACTICS));
+      saveTacticsToDB();
+    }
+  }
+
+  // 保存战法到数据库
+  function saveTacticsToDB() {
+    MarketDB.setModule(realMarketData.date, 'tactics', {
+      list: tactics,
+      _updatedAt: Date.now()
+    });
+  }
+
+  // 记录操作到撤回栈
+  function recordUndo(action, desc) {
+    undoStack.push({
+      action: action,
+      desc: desc,
+      snapshot: JSON.parse(JSON.stringify(tactics)),
+      timestamp: Date.now()
+    });
+    if (undoStack.length > MAX_UNDO) {
+      undoStack.shift();
+    }
+    updateUndoButton();
+  }
+
+  // 更新撤回按钮状态
+  function updateUndoButton() {
+    var btn = document.getElementById('tactic-undo-btn');
+    if (btn) {
+      btn.disabled = undoStack.length === 0;
+      if (undoStack.length > 0) {
+        btn.title = '撤回：' + undoStack[undoStack.length - 1].desc;
+      }
+    }
+  }
+
+  // 撤回上一步操作
+  window.undoTacticAction = function() {
+    if (undoStack.length === 0) return;
+    var last = undoStack.pop();
+    tactics = last.snapshot;
+    saveTacticsToDB();
+    renderTacticList();
+    // 如果当前选中的战法被删除了，清空
+    if (currentTacticId && !tactics.find(function(t) { return t.id === currentTacticId; })) {
+      currentTacticId = null;
+      renderTacticDetail();
+    } else {
+      renderTacticDetail();
+    }
+    updateUndoButton();
+    // 提示
+    showTacticToast('已撤回：' + last.desc);
+  };
+
+  // 渲染战法列表
+  function renderTacticList() {
+    var listEl = document.getElementById('tactic-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = tactics.map(function(t) {
+      var result = runTacticScreen(t);
+      var count = result.length;
+      var activeCls = t.id === currentTacticId ? 'active' : '';
+      return '<div class="tactic-item ' + activeCls + '" onclick="selectTactic(\'' + t.id + '\')">' +
+        '<span class="tactic-item-icon">' + t.icon + '</span>' +
+        '<div class="tactic-item-info">' +
+          '<div class="tactic-item-name">' + t.name + '</div>' +
+          '<div class="tactic-item-count">命中 <strong>' + count + '</strong> 只</div>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+  }
+
+  // 选择战法
+  window.selectTactic = function(id) {
+    currentTacticId = id;
+    renderTacticList();
+    renderTacticDetail();
+  };
+
+  // 渲染战法详情
+  function renderTacticDetail() {
+    var tactic = tactics.find(function(t) { return t.id === currentTacticId; });
+    var headerEl = document.getElementById('tactic-detail-header');
+    var condEl = document.getElementById('tactic-conditions');
+    var resultEl = document.getElementById('tactic-result-list');
+    var countEl = document.getElementById('tactic-result-count');
+    var nameEl = document.getElementById('tactic-detail-name');
+    var iconEl = document.getElementById('tactic-detail-icon');
+
+    if (!tactic) {
+      if (headerEl) headerEl.style.display = 'flex';
+      if (nameEl) nameEl.textContent = '请选择战法';
+      if (iconEl) iconEl.textContent = '📊';
+      if (condEl) condEl.innerHTML = '<span style="color:var(--muted);font-size:12px;">从左侧选择一个战法查看选股条件与结果</span>';
+      if (countEl) countEl.textContent = '--';
+      if (resultEl) resultEl.innerHTML = '<div class="tactic-empty">请选择战法查看选股结果</div>';
+      return;
+    }
+
+    if (nameEl) nameEl.textContent = tactic.name;
+    if (iconEl) iconEl.textContent = tactic.icon;
+
+    // 条件标签
+    if (condEl) {
+      condEl.innerHTML = tactic.conditions.map(function(c) {
+        var fieldDef = TACTIC_FIELDS.find(function(f) { return f.key === c.field; });
+        var opDef = TACTIC_OPS.find(function(o) { return o.key === c.op; });
+        var fieldLabel = fieldDef ? fieldDef.label : c.field;
+        var opSymbol = opDef ? opDef.symbol : c.op;
+        var unit = fieldDef ? fieldDef.unit : '';
+        var displayVal = c.value;
+        if (c.field === 'limitUp') {
+          displayVal = c.value === 'true' ? '是' : '否';
+        }
+        return '<span class="condition-tag">' +
+          '<span class="cond-field">' + fieldLabel + '</span>' +
+          '<span class="cond-op">' + opSymbol + '</span>' +
+          '<span class="cond-val">' + displayVal + unit + '</span>' +
+          '</span>';
+      }).join('');
+    }
+
+    // 选股结果
+    var result = runTacticScreen(tactic);
+    if (countEl) {
+      countEl.innerHTML = '共 <strong>' + result.length + '</strong> 只股票符合条件';
+    }
+    if (resultEl) {
+      if (result.length === 0) {
+        resultEl.innerHTML = '<div class="tactic-empty">暂无符合条件的股票</div>';
+      } else {
+        resultEl.innerHTML = result.slice(0, 50).map(function(s, idx) {
+          var chgCls = s.today >= 0 ? 'up' : 'down';
+          var chgSign = s.today >= 0 ? '+' : '';
+          var lianbanTag = s.lianban > 1
+            ? '<span style="color:var(--up);">· ' + s.lianban + '连板</span>'
+            : (s.lianban === 1 ? '<span style="color:var(--up);">· 首板</span>' : '');
+          return '<div class="tactic-stock-row" onclick="goToAnalysis(\'' + s.code + ' ' + s.name + '\')">' +
+            '<div class="tactic-stock-rank">' + (idx + 1) + '</div>' +
+            '<div class="tactic-stock-info">' +
+              '<div class="tactic-stock-name">' + s.name + '</div>' +
+              '<div class="tactic-stock-meta">' +
+                '<span class="tactic-stock-sector">' + s.sector + '</span>' +
+                '<span>' + s.price.toFixed(2) + '元</span>' +
+                lianbanTag +
+              '</div>' +
+            '</div>' +
+            '<div class="tactic-stock-change ' + chgCls + '">' + chgSign + s.today.toFixed(2) + '%</div>' +
+            '</div>';
+        }).join('');
+      }
+    }
+  }
+
+  // 战法选股引擎：根据条件筛选股票
+  function runTacticScreen(tactic) {
+    if (!tactic.conditions || tactic.conditions.length === 0) {
+      return [];
+    }
+
+    var stockPool = stocks || [];
+
+    var result = stockPool.filter(function(stock) {
+      for (var i = 0; i < tactic.conditions.length; i++) {
+        var cond = tactic.conditions[i];
+        var fieldVal = stock[cond.field];
+        if (fieldVal === undefined || fieldVal === null) {
+          // 换手率、市值等可能没有数据，跳过
+          if (cond.field === 'turnover' || cond.field === 'marketCap') {
+            fieldVal = 0;
+          } else {
+            return false;
+          }
+        }
+
+        var condVal = cond.value;
+        var numVal = parseFloat(fieldVal);
+        var numCond = parseFloat(condVal);
+
+        switch (cond.op) {
+          case 'gt':
+            if (isNaN(numVal) || isNaN(numCond)) return false;
+            if (!(numVal > numCond)) return false;
+            break;
+          case 'gte':
+            if (isNaN(numVal) || isNaN(numCond)) return false;
+            if (!(numVal >= numCond)) return false;
+            break;
+          case 'lt':
+            if (isNaN(numVal) || isNaN(numCond)) return false;
+            if (!(numVal < numCond)) return false;
+            break;
+          case 'lte':
+            if (isNaN(numVal) || isNaN(numCond)) return false;
+            if (!(numVal <= numCond)) return false;
+            break;
+          case 'eq':
+            if (cond.field === 'limitUp') {
+              var boolVal = condVal === 'true';
+              if (fieldVal !== boolVal) return false;
+            } else if (!isNaN(numVal) && !isNaN(numCond)) {
+              if (numVal !== numCond) return false;
+            } else {
+              if (String(fieldVal) !== String(condVal)) return false;
+            }
+            break;
+          case 'neq':
+            if (cond.field === 'limitUp') {
+              var boolVal2 = condVal === 'true';
+              if (fieldVal === boolVal2) return false;
+            } else if (!isNaN(numVal) && !isNaN(numCond)) {
+              if (numVal === numCond) return false;
+            } else {
+              if (String(fieldVal) === String(condVal)) return false;
+            }
+            break;
+          case 'contains':
+            if (String(fieldVal).indexOf(String(condVal)) < 0) return false;
+            break;
+          default:
+            return false;
+        }
+      }
+      return true;
+    });
+
+    // 按今日涨幅降序排列
+    result.sort(function(a, b) { return b.today - a.today; });
+    return result;
+  }
+
+  // 打开战法编辑器（新建或编辑）
+  window.openTacticEditor = function(tacticId) {
+    editingTacticId = tacticId || null;
+    var titleEl = document.getElementById('tactic-modal-title');
+    var nameInput = document.getElementById('tactic-form-name');
+    var descInput = document.getElementById('tactic-form-desc');
+    var condEditor = document.getElementById('tactic-conditions-editor');
+
+    if (titleEl) titleEl.textContent = tacticId ? '编辑战法' : '新建战法';
+
+    var tactic = tacticId ? tactics.find(function(t) { return t.id === tacticId; }) : null;
+    if (nameInput) nameInput.value = tactic ? tactic.name : '';
+    if (descInput) descInput.value = tactic ? (tactic.desc || '') : '';
+
+    // 设置图标
+    selectedIcon = tactic ? tactic.icon : '🚀';
+    var iconOptions = document.querySelectorAll('.tactic-icon-option');
+    iconOptions.forEach(function(el) {
+      el.classList.toggle('active', el.getAttribute('data-icon') === selectedIcon);
+    });
+
+    // 渲染条件行
+    conditionRowCount = 0;
+    if (condEditor) condEditor.innerHTML = '';
+    var conditions = tactic ? tactic.conditions : [];
+    if (conditions.length === 0) {
+      // 新建时默认添加一行
+      addConditionRow();
+    } else {
+      conditions.forEach(function(c) {
+        addConditionRow(c);
+      });
+    }
+
+    document.getElementById('tactic-modal-overlay').classList.add('show');
+  };
+
+  // 编辑当前战法
+  window.editCurrentTactic = function() {
+    if (!currentTacticId) return;
+    openTacticEditor(currentTacticId);
+  };
+
+  // 关闭编辑器
+  window.closeTacticEditor = function(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('tactic-modal-overlay').classList.remove('show');
+    editingTacticId = null;
+  };
+
+  // 选择图标
+  window.selectTacticIcon = function(el, icon) {
+    selectedIcon = icon;
+    document.querySelectorAll('.tactic-icon-option').forEach(function(opt) {
+      opt.classList.remove('active');
+    });
+    el.classList.add('active');
+  };
+
+  // 添加条件行
+  window.addConditionRow = function(condData) {
+    var editor = document.getElementById('tactic-conditions-editor');
+    if (!editor) return;
+    conditionRowCount++;
+    var rowId = 'cond_row_' + conditionRowCount;
+
+    var fieldOptions = TACTIC_FIELDS.map(function(f) {
+      return '<option value="' + f.key + '" ' + (condData && condData.field === f.key ? 'selected' : '') + '>' + f.label + '</option>';
+    }).join('');
+
+    var opOptions = TACTIC_OPS.map(function(o) {
+      return '<option value="' + o.key + '" ' + (condData && condData.op === o.key ? 'selected' : '') + '>' + o.symbol + ' ' + o.label + '</option>';
+    }).join('');
+
+    var valStr = condData ? condData.value : '';
+
+    var row = document.createElement('div');
+    row.className = 'cond-editor-row';
+    row.id = rowId;
+    row.innerHTML =
+      '<select class="cond-field-select" onchange="onConditionFieldChange(this)">' + fieldOptions + '</select>' +
+      '<select class="cond-op-select">' + opOptions + '</select>' +
+      '<input type="text" class="cond-val-input" placeholder="输入值" value="' + valStr + '">' +
+      '<button class="cond-del-btn" onclick="removeConditionRow(\'' + rowId + '\')" title="删除条件">×</button>';
+
+    editor.appendChild(row);
+
+    // 如果是布尔类型（涨停），改为下拉
+    if (condData && condData.field === 'limitUp') {
+      var valInput = row.querySelector('.cond-val-input');
+      var select = document.createElement('select');
+      select.className = 'cond-val-input';
+      select.innerHTML = '<option value="true" ' + (valStr === 'true' ? 'selected' : '') + '>是</option>' +
+        '<option value="false" ' + (valStr === 'false' ? 'selected' : '') + '>否</option>';
+      valInput.parentNode.replaceChild(select, valInput);
+    }
+  };
+
+  // 条件字段变化时处理
+  window.onConditionFieldChange = function(selectEl) {
+    var row = selectEl.closest('.cond-editor-row');
+    var valContainer = row.querySelector('.cond-val-input');
+    var field = selectEl.value;
+
+    // 重建值输入控件
+    var newInput;
+    if (field === 'limitUp') {
+      newInput = document.createElement('select');
+      newInput.className = 'cond-val-input';
+      newInput.innerHTML = '<option value="true">是</option><option value="false">否</option>';
+    } else if (field === 'sector') {
+      newInput = document.createElement('select');
+      newInput.className = 'cond-val-input';
+      var secOptions = sectors.map(function(s) {
+        return '<option value="' + s.name + '">' + s.name + '</option>';
+      }).join('');
+      newInput.innerHTML = '<option value="">全部板块</option>' + secOptions;
+    } else {
+      newInput = document.createElement('input');
+      newInput.type = 'text';
+      newInput.className = 'cond-val-input';
+      newInput.placeholder = '输入值';
+    }
+    valContainer.parentNode.replaceChild(newInput, valContainer);
+  };
+
+  // 删除条件行
+  window.removeConditionRow = function(rowId) {
+    var row = document.getElementById(rowId);
+    if (row) row.remove();
+  };
+
+  // 保存战法
+  window.saveTactic = function() {
+    var nameInput = document.getElementById('tactic-form-name');
+    var descInput = document.getElementById('tactic-form-desc');
+    var name = nameInput ? nameInput.value.trim() : '';
+
+    if (!name) {
+      showTacticToast('请输入战法名称');
+      return;
+    }
+
+    // 收集条件
+    var condRows = document.querySelectorAll('.cond-editor-row');
+    var conditions = [];
+    condRows.forEach(function(row) {
+      var fieldSel = row.querySelector('.cond-field-select');
+      var opSel = row.querySelector('.cond-op-select');
+      var valInput = row.querySelector('.cond-val-input');
+      if (fieldSel && opSel && valInput) {
+        var val = valInput.value.trim();
+        if (val !== '') {
+          conditions.push({
+            field: fieldSel.value,
+            op: opSel.value,
+            value: val
+          });
+        }
+      }
+    });
+
+    if (conditions.length === 0) {
+      showTacticToast('请至少添加一个选股条件');
+      return;
+    }
+
+    // 记录撤回
+    recordUndo('save', editingTacticId ? '编辑战法 ' + name : '新建战法 ' + name);
+
+    if (editingTacticId) {
+      // 编辑
+      var idx = tactics.findIndex(function(t) { return t.id === editingTacticId; });
+      if (idx >= 0) {
+        tactics[idx].name = name;
+        tactics[idx].icon = selectedIcon;
+        tactics[idx].desc = descInput ? descInput.value.trim() : '';
+        tactics[idx].conditions = conditions;
+      }
+    } else {
+      // 新建
+      tactics.push({
+        id: 'tactic_' + Date.now(),
+        name: name,
+        icon: selectedIcon,
+        desc: descInput ? descInput.value.trim() : '',
+        conditions: conditions
+      });
+      currentTacticId = tactics[tactics.length - 1].id;
+    }
+
+    saveTacticsToDB();
+    closeTacticEditor();
+    renderTacticList();
+    renderTacticDetail();
+    showTacticToast(editingTacticId ? '战法已更新' : '战法创建成功');
+  };
+
+  // 删除当前战法
+  window.deleteCurrentTactic = function() {
+    if (!currentTacticId) return;
+    var tactic = tactics.find(function(t) { return t.id === currentTacticId; });
+    if (!tactic) return;
+    document.getElementById('delete-tactic-name').textContent = tactic.name;
+    document.getElementById('tactic-delete-overlay').classList.add('show');
+  };
+
+  // 关闭删除确认
+  window.closeDeleteConfirm = function(e) {
+    if (e && e.target !== e.currentTarget) return;
+    document.getElementById('tactic-delete-overlay').classList.remove('show');
+  };
+
+  // 确认删除
+  window.confirmDeleteTactic = function() {
+    if (!currentTacticId) return;
+    var tactic = tactics.find(function(t) { return t.id === currentTacticId; });
+    if (!tactic) return;
+
+    // 记录撤回
+    recordUndo('delete', '删除战法 ' + tactic.name);
+
+    tactics = tactics.filter(function(t) { return t.id !== currentTacticId; });
+    currentTacticId = null;
+    saveTacticsToDB();
+    closeDeleteConfirm();
+    renderTacticList();
+    renderTacticDetail();
+    showTacticToast('战法已删除，可点击撤回恢复');
+  };
+
+  // 显示提示
+  function showTacticToast(msg) {
+    var existing = document.getElementById('tactic-toast');
+    if (existing) existing.remove();
+
+    var toast = document.createElement('div');
+    toast.id = 'tactic-toast';
+    toast.style.cssText = 'position:fixed;top:20px;left:50%;transform:translateX(-50%);padding:10px 20px;background:rgba(51,65,85,0.95);color:white;border-radius:8px;font-size:13px;z-index:2000;box-shadow:0 4px 12px rgba(0,0,0,0.3);animation:toastIn 0.25s ease-out;';
+    toast.textContent = msg;
+    document.body.appendChild(toast);
+
+    setTimeout(function() {
+      toast.style.opacity = '0';
+      toast.style.transition = 'opacity 0.3s';
+      setTimeout(function() { toast.remove(); }, 300);
+    }, 1800);
+  }
+
+  // 初始化战法选股模块
+  function initTacticModule() {
+    loadTactics();
+    renderTacticList();
+    // 默认选中第一个战法
+    if (tactics.length > 0) {
+      currentTacticId = tactics[0].id;
+      renderTacticDetail();
+    }
+    updateUndoButton();
+  }
+
+  // 刷新战法选股结果（数据更新时调用）
+  function refreshTacticModule() {
+    renderTacticList();
+    if (currentTacticId) {
+      renderTacticDetail();
+    }
+  }
+
+  // Expose
+  window.openTacticEditor = openTacticEditor;
+  window.closeTacticEditor = closeTacticEditor;
+  window.selectTacticIcon = selectTacticIcon;
+  window.addConditionRow = addConditionRow;
+  window.removeConditionRow = removeConditionRow;
+  window.onConditionFieldChange = onConditionFieldChange;
+  window.saveTactic = saveTactic;
+  window.selectTactic = selectTactic;
+  window.editCurrentTactic = editCurrentTactic;
+  window.deleteCurrentTactic = deleteCurrentTactic;
+  window.closeDeleteConfirm = closeDeleteConfirm;
+  window.confirmDeleteTactic = confirmDeleteTactic;
+  window.undoTacticAction = undoTacticAction;
+  window.initTacticModule = initTacticModule;
+  window.refreshTacticModule = refreshTacticModule;
 
 })();
