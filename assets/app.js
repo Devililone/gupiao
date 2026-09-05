@@ -288,42 +288,172 @@
     }
   };
 
-  // ==================== Sector Table ====================
-  function getSortedSectors() {
-    return sectors.slice().sort(function(a, b) { return b.d5 - a.d5; });
+  // ==================== Sector Table · 专业金融风格 ====================
+  // 板块数据工具函数
+  var SectorUtil = {
+    // 格式化涨跌幅（带正负号，保留2位小数）
+    formatPct: function(val) {
+      var sign = val >= 0 ? '+' : '';
+      return sign + val.toFixed(2) + '%';
+    },
+    // 涨跌幅颜色类名
+    pctClass: function(val) {
+      return val >= 0 ? 'pct-up' : 'pct-down';
+    },
+    // 获取板块领涨股（涨幅最高）
+    getLeader: function(sectorName) {
+      var sectorStocks = stocks.filter(function(st) { return st.sector === sectorName; });
+      if (sectorStocks.length === 0) return null;
+      sectorStocks.sort(function(a, b) { return b.today - a.today; });
+      return sectorStocks[0];
+    },
+    // 获取板块涨停股列表
+    getLimitUpStocks: function(sectorName) {
+      return stocks.filter(function(st) {
+        return st.sector === sectorName && st.limitUp;
+      });
+    },
+    // 计算板块上涨家数占比
+    getUpRatio: function(sector) {
+      return sector.total > 0 ? Math.round(sector.upCount / sector.total * 100) : 0;
+    },
+    // 板块强度评分（综合今日+5日+20日+量能+上涨占比）
+    getStrengthScore: function(s) {
+      var score = 0;
+      score += s.today * 3;        // 今日权重最高
+      score += s.d5 * 2;           // 5日次之
+      score += s.d20 * 0.5;        // 20日权重较低
+      score += (s.volChange.indexOf('+') === 0 ? 5 : -3); // 量能加分
+      score += s.strongDays * 1.5; // 连续走强加分
+      score += this.getUpRatio(s) * 0.1; // 上涨占比
+      return Math.round(score * 10) / 10;
+    },
+    // 板块热度等级
+    getHeatLevel: function(s) {
+      var luCount = this.getLimitUpStocks(s.name).length;
+      if (luCount >= 5 && s.today > 3) return { level: 5, text: '极度火爆', color: 'var(--up)' };
+      if (luCount >= 3 && s.today > 2) return { level: 4, text: '高度活跃', color: '#f97316' };
+      if (luCount >= 1 && s.today > 1) return { level: 3, text: '较为活跃', color: '#eab308' };
+      if (s.today > 0) return { level: 2, text: '温和上涨', color: '#84cc16' };
+      if (s.today > -2) return { level: 1, text: '震荡整理', color: 'var(--muted)' };
+      return { level: 0, text: '走势偏弱', color: 'var(--down)' };
+    }
+  };
+
+  function getSortedSectors(sortBy) {
+    sortBy = sortBy || 'd5';
+    return sectors.slice().sort(function(a, b) {
+      if (sortBy === 'today') return b.today - a.today;
+      if (sortBy === 'd20') return b.d20 - a.d20;
+      if (sortBy === 'strength') return SectorUtil.getStrengthScore(b) - SectorUtil.getStrengthScore(a);
+      if (sortBy === 'volume') return b.volume - a.volume;
+      if (sortBy === 'limitUp') {
+        return SectorUtil.getLimitUpStocks(b.name).length - SectorUtil.getLimitUpStocks(a.name).length;
+      }
+      return b.d5 - a.d5;
+    });
   }
 
-  function renderSectorTable() {
+  function renderSectorTable(sortBy) {
     var tbody = document.getElementById('sector-table-body');
     if (!tbody) return;
-    var sortedSectors = getSortedSectors();
-    tbody.innerHTML = sortedSectors.map(function(s) {
-      var todayClass = s.today >= 0 ? 'pct-up' : 'pct-down';
-      var todaySign = s.today >= 0 ? '+' : '';
-      var d5Class = s.d5 >= 0 ? 'pct-up' : 'pct-down';
-      var d5Sign = s.d5 >= 0 ? '+' : '';
-      var d20Class = s.d20 >= 0 ? 'pct-up' : 'pct-down';
-      var d20Sign = s.d20 >= 0 ? '+' : '';
-      var volClass = s.volChange.indexOf('+') === 0 ? 'pct-up' : 'pct-down';
+    var sortedSectors = getSortedSectors(sortBy || 'd5');
 
-      return '<tr onclick="selectSector(this)">' +
-        '<td class="sector-name">' + s.name + '</td>' +
-        '<td class="' + todayClass + '">' + todaySign + s.today + '%</td>' +
-        '<td class="' + d5Class + '">' + d5Sign + s.d5 + '%</td>' +
-        '<td class="' + d20Class + '">' + d20Sign + s.d20 + '%</td>' +
-        '<td>' + s.upCount + ' / ' + s.total + '</td>' +
-        '<td class="' + volClass + '">' + s.volChange + '</td>' +
-        '<td>' + s.strongDays + '天</td>' +
-        '<td><span class="sector-trend trend-' + s.trend + '">' + s.trendText + '</span></td>' +
+    tbody.innerHTML = sortedSectors.map(function(s, idx) {
+      var todayCls = SectorUtil.pctClass(s.today);
+      var d5Cls = SectorUtil.pctClass(s.d5);
+      var d20Cls = SectorUtil.pctClass(s.d20);
+      var volCls = s.volChange.indexOf('+') === 0 ? 'pct-up' : 'pct-down';
+      var upRatio = SectorUtil.getUpRatio(s);
+      var upRatioCls = upRatio > 60 ? 'up' : (upRatio > 40 ? 'neutral' : 'down');
+      var leader = SectorUtil.getLeader(s.name);
+      var luCount = SectorUtil.getLimitUpStocks(s.name).length;
+      var heat = SectorUtil.getHeatLevel(s);
+      var rank = idx + 1;
+      var rankCls = rank <= 3 ? 'rank-top' : (rank > sortedSectors.length - 3 ? 'rank-bottom' : '');
+
+      // 领涨股显示
+      var leaderHtml = leader
+        ? '<span class="sector-leader" onclick="event.stopPropagation();goToAnalysis(\'' + leader.code + ' ' + leader.name + '\')">' +
+          leader.name +
+          '<span class="sector-leader-pct ' + SectorUtil.pctClass(leader.today) + '">' +
+          SectorUtil.formatPct(leader.today) +
+          '</span></span>'
+        : '<span class="sector-leader-none">--</span>';
+
+      // 涨停标签
+      var luTag = luCount > 0
+        ? '<span class="sector-lu-tag">' + luCount + '只涨停</span>'
+        : '';
+
+      return '<tr class="sector-row ' + rankCls + '" onclick="selectSector(this, \'' + s.name + '\')">' +
+        '<td class="sector-rank">' + rank + '</td>' +
+        '<td class="sector-name-cell">' +
+          '<div class="sector-name-main">' +
+            '<span class="sector-icon">' + (s.icon || '📊') + '</span>' +
+            '<span class="sector-name-text">' + s.name + '</span>' +
+            luTag +
+          '</div>' +
+          '<div class="sector-leader-row">' + leaderHtml + '</div>' +
+        '</td>' +
+        '<td class="sector-pct-big ' + todayCls + '">' + SectorUtil.formatPct(s.today) + '</td>' +
+        '<td class="' + d5Cls + ' num-right">' + SectorUtil.formatPct(s.d5) + '</td>' +
+        '<td class="' + d20Cls + ' num-right">' + SectorUtil.formatPct(s.d20) + '</td>' +
+        '<td class="sector-upratio">' +
+          '<div class="upratio-bar">' +
+            '<div class="upratio-fill ' + upRatioCls + '" style="width:' + upRatio + '%"></div>' +
+          '</div>' +
+          '<div class="upratio-text">' + s.upCount + '/' + s.total + ' · ' + upRatio + '%</div>' +
+        '</td>' +
+        '<td class="sector-vol ' + volCls + '">' +
+          '<div class="vol-main">' + s.volume.toFixed(0) + '亿</div>' +
+          '<div class="vol-change">' + s.volChange + '</div>' +
+        '</td>' +
+        '<td class="sector-days">' +
+          '<span class="strong-days">' + s.strongDays + '</span>天' +
+        '</td>' +
+        '<td class="sector-heat">' +
+          '<span class="heat-badge" style="color:' + heat.color + ';border-color:' + heat.color + ';">' + heat.text + '</span>' +
+        '</td>' +
         '</tr>';
     }).join('');
+
+    // 更新统计信息
+    var upSectors = sortedSectors.filter(function(s) { return s.today > 0; }).length;
+    var downSectors = sortedSectors.length - upSectors;
+    var topSector = sortedSectors[0];
+    var statsEl = document.getElementById('sector-stats');
+    if (statsEl) {
+      statsEl.innerHTML =
+        '<span class="sec-stat up">上涨板块 <strong>' + upSectors + '</strong></span>' +
+        '<span class="sec-stat down">下跌板块 <strong>' + downSectors + '</strong></span>' +
+        '<span class="sec-stat">最强板块 <strong>' + (topSector ? topSector.name : '--') + '</strong></span>' +
+        '<span class="sec-stat">板块总数 <strong>' + sortedSectors.length + '</strong></span>';
+    }
   }
 
-  window.selectSector = function(row) {
+  // 当前排序方式
+  var currentSectorSort = 'd5';
+  window.sortSectors = function(by) {
+    currentSectorSort = by;
+    renderSectorTable(by);
+    // 更新表头高亮
+    document.querySelectorAll('.sector-table th.sortable').forEach(function(th) {
+      th.classList.remove('sort-active');
+    });
+    var activeTh = document.querySelector('.sector-table th[data-sort="' + by + '"]');
+    if (activeTh) activeTh.classList.add('sort-active');
+  };
+
+  window.selectSector = function(row, sectorName) {
     document.querySelectorAll('#sector-table-body tr').forEach(function(r) {
       r.classList.remove('selected');
     });
     row.classList.add('selected');
+    // 跳转到个股筛选并过滤该板块
+    if (window.filterBySector) {
+      window.filterBySector(sectorName);
+    }
   };
 
   // ==================== Stock Grid ====================
@@ -560,9 +690,16 @@
       });
 
       // Re-render all affected components
-      renderSectorTable();
+      renderSectorTable(currentSectorSort);
       renderStockGrid('stock-grid-screen', 'all');
       renderStockGrid('stock-grid-classify', 'all');
+
+      // 数据更新闪烁动画
+      var sectorTableEl = document.querySelector('.sector-table');
+      if (sectorTableEl) {
+        sectorTableEl.classList.add('data-flash');
+        setTimeout(function() { sectorTableEl.classList.remove('data-flash'); }, 500);
+      }
 
       // Refresh charts if the chart refresh function exists
       if (window.refreshSectorCharts) {
@@ -2720,30 +2857,85 @@
     if (topEl) topEl.textContent = dragonData.topSector;
     if (volEl) volEl.textContent = (dragonData.totalVolume / 100).toFixed(0) + '万亿';
 
-    el.innerHTML = dragonData.resonanceSectors.map(function(s) {
+    el.innerHTML = dragonData.resonanceSectors.map(function(s, idx) {
       var zfColor = s.zhangfu >= 0 ? 'var(--up)' : 'var(--down)';
       var zfSign = s.zhangfu >= 0 ? '+' : '';
       var dragonZfColor = s.dragonChange >= 0 ? 'var(--up)' : 'var(--down)';
       var dragonZfSign = s.dragonChange >= 0 ? '+' : '';
       var strongClass = s.isStrong ? 'strong' : '';
 
-      return '<div class="resonance-card ' + strongClass + '">' +
+      // 计算上涨占比
+      var upRatio = s.total > 0 ? Math.round(s.upCount / s.total * 100) : 0;
+      var upRatioCls = upRatio > 60 ? 'up' : (upRatio > 40 ? 'neutral' : 'down');
+
+      // 热度等级
+      var heatLevel = s.limitUp >= 5 && s.zhangfu > 3 ? 5 :
+        s.limitUp >= 3 && s.zhangfu > 2 ? 4 :
+        s.limitUp >= 1 && s.zhangfu > 1 ? 3 :
+        s.zhangfu > 0 ? 2 :
+        s.zhangfu > -2 ? 1 : 0;
+      var heatDots = '';
+      for (var h = 1; h <= 5; h++) {
+        heatDots += '<span class="heat-dot ' + (h <= heatLevel ? 'active' : '') + '"></span>';
+      }
+
+      // 排名
+      var rank = idx + 1;
+      var rankBadge = rank <= 3 ? '<span class="res-rank rank-' + rank + '">' + rank + '</span>' : '<span class="res-rank">' + rank + '</span>';
+
+      return '<div class="resonance-card ' + strongClass + '" onclick="goToSectorAnalysis(\'' + s.name + '\')">' +
         '<div class="resonance-header">' +
-          '<div class="resonance-name"><span class="resonance-icon">' + s.icon + '</span>' + s.name + '</div>' +
+          '<div class="resonance-name">' +
+            rankBadge +
+            '<span class="resonance-icon">' + s.icon + '</span>' +
+            s.name +
+          '</div>' +
           '<div class="resonance-change" style="color:' + zfColor + ';">' + zfSign + s.zhangfu.toFixed(2) + '%</div>' +
         '</div>' +
+        '<div class="resonance-heat-bar">' + heatDots + '</div>' +
         '<div class="resonance-stats-row">' +
-          '<div class="res-stat-item"><div class="res-stat-item-label">上涨/总数</div><div class="res-stat-item-value up">' + s.upCount + '/' + s.total + '</div></div>' +
-          '<div class="res-stat-item"><div class="res-stat-item-label">涨停数</div><div class="res-stat-item-value up">' + s.limitUp + '</div></div>' +
-          '<div class="res-stat-item"><div class="res-stat-item-label">成交额</div><div class="res-stat-item-value">' + s.volume + '</div></div>' +
+          '<div class="res-stat-item">' +
+            '<div class="res-stat-item-label">上涨家数</div>' +
+            '<div class="res-stat-item-value">' + s.upCount + '/' + s.total + '</div>' +
+          '</div>' +
+          '<div class="res-stat-item">' +
+            '<div class="res-stat-item-label">涨停数</div>' +
+            '<div class="res-stat-item-value up">' + s.limitUp + '只</div>' +
+          '</div>' +
+          '<div class="res-stat-item">' +
+            '<div class="res-stat-item-label">成交额</div>' +
+            '<div class="res-stat-item-value">' + s.volume + '</div>' +
+          '</div>' +
+        '</div>' +
+        '<div class="resonance-upratio">' +
+          '<div class="upratio-bar small">' +
+            '<div class="upratio-fill ' + upRatioCls + '" style="width:' + upRatio + '%"></div>' +
+          '</div>' +
+          '<span class="upratio-label">' + upRatio + '% 上涨占比</span>' +
         '</div>' +
         '<div class="resonance-dragon">' +
-          '<span class="resonance-dragon-label">👑 龙头</span>' +
-          '<span class="resonance-dragon-name">' + s.dragon + ' ' + dragonZfSign + s.dragonChange.toFixed(2) + '%</span>' +
+          '<span class="resonance-dragon-label">👑 领涨龙头</span>' +
+          '<span class="resonance-dragon-name">' + s.dragon + '</span>' +
+          '<span class="resonance-dragon-pct" style="color:' + dragonZfColor + ';">' + dragonZfSign + s.dragonChange.toFixed(2) + '%</span>' +
         '</div>' +
         '</div>';
     }).join('');
   }
+
+  // 跳转到板块分析
+  window.goToSectorAnalysis = function(sectorName) {
+    // 切换到板块轮动标签的第二层
+    switchTab('rotation');
+    setTimeout(function() {
+      var rows = document.querySelectorAll('#sector-table-body tr');
+      rows.forEach(function(r) {
+        if (r.textContent.indexOf(sectorName) >= 0) {
+          r.classList.add('selected');
+          r.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        }
+      });
+    }, 100);
+  };
 
   // Render yesterday auction limit-up review
   function renderYesterdayAuctionReview() {
