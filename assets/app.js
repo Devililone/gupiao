@@ -161,6 +161,24 @@
         totalKB: Math.round(totalBytes / 1024),
         lastUpdate: meta.lastUpdate ? new Date(meta.lastUpdate).toLocaleString() : '无'
       };
+    },
+
+    // 保存全量快照（所有模块数据一次性写入）
+    saveSnapshot: function(dateStr, snapshot) {
+      return this.saveDay(dateStr, snapshot);
+    },
+
+    // 读取某模块某天的数据
+    getModule: function(dateStr, moduleName) {
+      var day = this.getDay(dateStr);
+      return day ? day[moduleName] : null;
+    },
+
+    // 写入某模块某天的数据
+    setModule: function(dateStr, moduleName, data) {
+      var patch = {};
+      patch[moduleName] = data;
+      return this.updateDay(dateStr, patch);
     }
   };
 
@@ -572,6 +590,17 @@
         }
       }
 
+      // 持久化市场快照（板块+个股）到数据库
+      if (MarketDB && MarketDB.setModule) {
+        var snap = {
+          sectors: JSON.parse(JSON.stringify(sectors)),
+          stocks: JSON.parse(JSON.stringify(stocks)),
+          realMarketData: JSON.parse(JSON.stringify(realMarketData)),
+          _source: 'real'
+        };
+        MarketDB.setModule(realMarketData.date, 'marketSnapshot', snap);
+      }
+
       // Update timestamp
       lastUpdateTime = new Date();
       nextUpdateTime = new Date(lastUpdateTime.getTime() + 60 * 60 * 1000);
@@ -637,6 +666,15 @@
 
   // ==================== Init ====================
   document.addEventListener('DOMContentLoaded', function() {
+    // 将今日市场快照存入数据库
+    var todaySnap = {
+      sectors: JSON.parse(JSON.stringify(sectors)),
+      stocks: JSON.parse(JSON.stringify(stocks)),
+      realMarketData: JSON.parse(JSON.stringify(realMarketData)),
+      _source: 'real'
+    };
+    MarketDB.setModule(realMarketData.date, 'marketSnapshot', todaySnap);
+
     renderSectorTable();
     renderStockGrid('stock-grid-screen', 'all');
     renderStockGrid('stock-grid-classify', 'all');
@@ -2447,6 +2485,115 @@
   // Dragon data store
   var dragonData = null;
 
+  // 生成历史日的市场快照（板块+个股）
+  function generateHistoricalMarketSnapshot(dateStr) {
+    var seedBase = new Date(dateStr).getFullYear() * 10000 +
+      (new Date(dateStr).getMonth() + 1) * 100 +
+      new Date(dateStr).getDate();
+    var rand = seededRandom(seedBase);
+
+    // 板块数据（基于真实板块列表+随机波动）
+    var baseSectors = [
+      { name: '养殖业', base: 5.30, icon: '🌾' },
+      { name: '白酒', base: 2.64, icon: '🍶' },
+      { name: '房地产', base: 1.15, icon: '🏠' },
+      { name: '银行', base: 0.87, icon: '🏦' },
+      { name: '钢铁', base: 0.14, icon: '🔩' },
+      { name: '煤炭', base: -0.23, icon: '⛏️' },
+      { name: '光伏设备', base: -0.42, icon: '☀️' },
+      { name: '创新药', base: -0.70, icon: '💊' },
+      { name: '军工', base: -0.25, icon: '✈️' },
+      { name: 'AI算力', base: -1.85, icon: '💻' },
+      { name: '新能源汽车', base: -1.09, icon: '🚗' },
+      { name: '消费电子', base: -2.28, icon: '📱' },
+      { name: '机器人', base: -2.62, icon: '🤖' },
+      { name: '半导体', base: -2.86, icon: '🔬' },
+      { name: '光模块', base: -2.15, icon: '📡' },
+      { name: '储能', base: -1.5, icon: '🔋' }
+    ];
+
+    var histSectors = baseSectors.map(function(bs) {
+      var todayVar = (rand() - 0.5) * 4;
+      var d5Var = (rand() - 0.5) * 6;
+      var d20Var = (rand() - 0.5) * 10;
+      var total = Math.floor(30 + rand() * 80);
+      var upRatio = 0.3 + rand() * 0.5;
+      return {
+        name: bs.name,
+        today: parseFloat((bs.base + todayVar).toFixed(2)),
+        d5: parseFloat((bs.base * 2 + d5Var).toFixed(2)),
+        d20: parseFloat((bs.base * 3 + d20Var).toFixed(2)),
+        upCount: Math.floor(total * upRatio),
+        total: total,
+        volChange: (rand() > 0.5 ? '+' : '') + Math.floor((rand() - 0.3) * 200) + '%',
+        strongDays: Math.floor(rand() * 5),
+        trend: rand() > 0.5 ? 'strong' : (rand() > 0.5 ? 'weakening' : 'oscillating'),
+        trendText: rand() > 0.6 ? '持续强势' : (rand() > 0.5 ? '走势偏弱' : '震荡整理'),
+        limitUp: Math.floor(rand() * 8),
+        volume: parseFloat((50 + rand() * 500).toFixed(1)),
+        icon: bs.icon
+      };
+    });
+
+    // 个股数据（简化版，保证板块联动）
+    var histStocks = [];
+    var stockNameIdx = 0;
+    histSectors.forEach(function(sec) {
+      // 每个板块 2-4 只代表性股票
+      var count = 2 + Math.floor(rand() * 3);
+      for (var i = 0; i < count; i++) {
+        var name = _stockNamePool[stockNameIdx % _stockNamePool.length];
+        stockNameIdx++;
+        var isLimitUp = sec.today > 2 && rand() > 0.6;
+        var lianban = isLimitUp ? (rand() > 0.7 ? Math.floor(rand() * 3) + 2 : 1) : 0;
+        var todayChg = isLimitUp ? parseFloat((9.5 + rand() * 0.8).toFixed(2))
+          : parseFloat((sec.today + (rand() - 0.5) * 3).toFixed(2));
+        histStocks.push({
+          code: ['60', '00', '30', '68'][Math.floor(rand() * 4)] +
+            String(Math.floor(rand() * 9000) + 1000),
+          name: name,
+          price: parseFloat((10 + rand() * 200).toFixed(2)),
+          today: todayChg,
+          d5: parseFloat((sec.d5 + (rand() - 0.5) * 4).toFixed(2)),
+          d10: parseFloat((sec.d5 * 1.5 + (rand() - 0.5) * 5).toFixed(2)),
+          d20: parseFloat((sec.d20 + (rand() - 0.5) * 6).toFixed(2)),
+          sector: sec.name,
+          lianban: lianban,
+          boardType: lianban > 1 ? lianban + '连板' : (lianban === 1 ? '首板' : '趋势'),
+          category: rand() > 0.5 ? 'trend' : (rand() > 0.5 ? 'start' : 'pullback'),
+          catText: '观察'
+        });
+      }
+    });
+
+    return {
+      date: dateStr,
+      sectors: histSectors,
+      stocks: histStocks,
+      _source: 'historical'
+    };
+  }
+
+  // 获取某天的市场快照（板块+个股）
+  function getMarketSnapshot(dateStr) {
+    // 今日用真实数据
+    if (dateStr === realMarketData.date) {
+      return {
+        date: dateStr,
+        sectors: sectors,
+        stocks: stocks,
+        _source: 'real'
+      };
+    }
+    // 从数据库读
+    var dbData = MarketDB.getModule(dateStr, 'marketSnapshot');
+    if (dbData) return dbData;
+    // 生成并存入
+    var snap = generateHistoricalMarketSnapshot(dateStr);
+    MarketDB.setModule(dateStr, 'marketSnapshot', snap);
+    return snap;
+  }
+
 
   // Dragon tab switching
   window.switchDragonTab = function(tab, btn) {
@@ -2709,6 +2856,10 @@
   // Refresh dragon module
   function refreshDragonModule() {
     dragonData = generateDragonData();
+    // 持久化到数据库
+    if (MarketDB && MarketDB.setModule) {
+      MarketDB.setModule(realMarketData.date, 'dragon', dragonData);
+    }
     updateDragonMarketOverview();
     renderAuctionTable(dragonData.auctionStocks.slice(0, 15));
     renderAnchorGangs();
@@ -2727,9 +2878,59 @@
     }
   }
 
+  // 生成历史日的龙头狙击数据
+  function generateHistoricalDragonData(dateStr) {
+    var snap = getMarketSnapshot(dateStr);
+    // 暂存全局变量
+    var origSectors = sectors;
+    var origStocks = stocks;
+    // 替换为历史数据
+    sectors = snap.sectors;
+    stocks = snap.stocks;
+    // 生成
+    var result = generateDragonData();
+    result._source = 'historical';
+    // 恢复
+    sectors = origSectors;
+    stocks = origStocks;
+    return result;
+  }
+
+  // 获取某天的龙头狙击数据
+  function getDragonData(dateStr) {
+    if (dateStr === realMarketData.date) {
+      if (!dragonData) dragonData = generateDragonData();
+      return dragonData;
+    }
+    var dbData = MarketDB.getModule(dateStr, 'dragon');
+    if (dbData) return dbData;
+    var hist = generateHistoricalDragonData(dateStr);
+    MarketDB.setModule(dateStr, 'dragon', hist);
+    return hist;
+  }
+
   // Init dragon module
   function initDragonModule() {
-    dragonData = generateDragonData();
+    // 先尝试从数据库加载今日数据
+    var dbDragon = MarketDB.getModule(realMarketData.date, 'dragon');
+    if (dbDragon) {
+      dragonData = dbDragon;
+    } else {
+      dragonData = generateDragonData();
+      MarketDB.setModule(realMarketData.date, 'dragon', dragonData);
+    }
+
+    // 确保最近7天历史数据在数据库中
+    for (var i = 6; i >= 1; i--) {
+      var d = new Date(realMarketData.date);
+      d.setDate(d.getDate() - i);
+      var ds = Timeline.formatFull(d);
+      if (!MarketDB.getModule(ds, 'dragon')) {
+        var histDragon = generateHistoricalDragonData(ds);
+        MarketDB.setModule(ds, 'dragon', histDragon);
+      }
+    }
+
     updateDragonMarketOverview();
     renderAuctionTable(dragonData.auctionStocks.slice(0, 15));
     renderAnchorGangs();
