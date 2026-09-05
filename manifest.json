@@ -1,0 +1,57 @@
+{
+  "name": "股票趋势筛选工作台",
+  "short_name": "趋势工作台",
+  "description": "A股趋势筛选 · 连板情绪 · 板块轮动 · 龙头狙击 · 每日复盘",
+  "start_url": "./stock-trend-workstation.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait-primary",
+  "background_color": "#f5f7fb",
+  "theme_color": "#6366f1",
+  "lang": "zh-CN",
+  "dir": "ltr",
+  "categories": ["finance", "business", "productivity"],
+  "icons": [
+    {
+      "src": "assets/icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icons/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "assets/screenshots/screenshot1.png",
+      "sizes": "1080x1920",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "趋势筛选主界面"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "趋势筛选",
+      "short_name": "筛选",
+      "url": "./stock-trend-workstation.html#funnel",
+      "icons": [{ "src": "assets/icons/shortcut-funnel.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "龙头狙击",
+      "short_name": "狙击",
+      "url": "./stock-trend-workstation.html#dragon",
+      "icons": [{ "src": "assets/icons/shortcut-dragon.png", "sizes": "96x96" }]
+    },
+    {
+      "name": "每日复盘",
+      "short_name": "复盘",
+      "url": "./stock-trend-workstation.html#daily",
+      "icons": [{ "src": "assets/icons/shortcut-daily.png", "sizes": "96x96" }]
+    }
+  ]
+}

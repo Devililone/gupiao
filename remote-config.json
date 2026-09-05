@@ -1,0 +1,28 @@
+{
+  "version": "1.0.0",
+  "buildTime": "2026-09-05T00:00:00Z",
+  "changelog": "初始版本发布",
+  "minSupportedVersion": "1.0.0",
+  "forceUpdate": false,
+  "updateMessage": "",
+  "updateUrl": "",
+  "icon": "",
+  "features": {
+    "autoRefresh": true,
+    "pushNotification": true,
+    "offlineMode": true,
+    "debugMode": false
+  },
+  "dataEndpoints": {
+    "sectors": "/api/market/sectors",
+    "stocks": "/api/market/stocks",
+    "dragon": "/api/market/dragon",
+    "dailyReview": "/api/market/daily-review"
+  },
+  "refreshIntervals": {
+    "market": 3600000,
+    "dragon": 3600000,
+    "daily": 3600000,
+    "config": 86400000
+  }
+}

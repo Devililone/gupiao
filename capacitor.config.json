@@ -1,0 +1,61 @@
+{
+  "appId": "com.stocktrend.workstation",
+  "appName": "股票趋势工作台",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https",
+    "hostname": "app.stocktrend.workstation"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1500,
+      "launchAutoHide": true,
+      "backgroundColor": "#6366f1",
+      "androidScaleType": "CENTER_CROP",
+      "showSpinner": false,
+      "splashFullScreen": true,
+      "splashImmersive": false
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#6366f1",
+      "overlaysWebView": false
+    },
+    "Keyboard": {
+      "resize": "native",
+      "style": "LIGHT"
+    },
+    "LocalNotifications": {
+      "smallIcon": "ic_stat_icon",
+      "iconColor": "#6366f1",
+      "sound": "beep.wav"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Haptics": {
+      "enableVibrate": true
+    },
+    "Share": {},
+    "Network": {},
+    "App": {
+      "backgroundColor": "#f5f7fb"
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    }
+  },
+  "cordova": {},
+  "server": {
+    "androidScheme": "https"
+  },
+  "android": {
+    "allowMixedContent": false,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
+  },
+  "ios": {
+    "contentInset": "always",
+    "limitsNavigationsToAppBoundDomains": false
+  }
+}

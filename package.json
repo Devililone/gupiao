@@ -1,0 +1,39 @@
+{
+  "name": "stock-trend-workstation",
+  "version": "1.0.0",
+  "description": "A股趋势筛选工作台 - 移动端App",
+  "author": "Stock Trend Team",
+  "license": "MIT",
+  "scripts": {
+    "dev": "python3 -m http.server 8765",
+    "build:web": "node scripts/build-web.js",
+    "build:android": "npm run build:web && npx cap sync android && cd android && ./gradlew assembleRelease",
+    "build:ios": "npm run build:web && npx cap sync ios && cd ios && pod install && xcodebuild -workspace App.xcworkspace -scheme App -configuration Release -archivePath ./App.xcarchive archive",
+    "sync:android": "npm run build:web && npx cap sync android",
+    "sync:ios": "npm run build:web && npx cap sync ios",
+    "open:android": "npx cap open android",
+    "open:ios": "npx cap open ios",
+    "update:icons": "node scripts/generate-icons.js",
+    "update:splash": "node scripts/generate-splash.js",
+    "release": "node scripts/release.js",
+    "ota:publish": "node scripts/ota-publish.js",
+    "clean": "rm -rf www android ios"
+  },
+  "dependencies": {
+    "@capacitor/core": "^6.0.0",
+    "@capacitor/android": "^6.0.0",
+    "@capacitor/ios": "^6.0.0",
+    "@capacitor/splash-screen": "^6.0.0",
+    "@capacitor/status-bar": "^6.0.0",
+    "@capacitor/keyboard": "^6.0.0",
+    "@capacitor/local-notifications": "^6.0.0",
+    "@capacitor/push-notifications": "^6.0.0",
+    "@capacitor/haptics": "^6.0.0",
+    "@capacitor/share": "^6.0.0",
+    "@capacitor/network": "^6.0.0",
+    "@capacitor/app": "^6.0.0"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.0.0"
+  }
+}
