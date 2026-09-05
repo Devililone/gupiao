@@ -216,6 +216,26 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
+  // 涨停板块分组折叠/展开
+  window.toggleSectorGroup = function(headerEl) {
+    var body = headerEl.nextElementSibling;
+    if (!body) return;
+    body.classList.toggle('lus-collapsed');
+    // 切换箭头
+    var nameEl = headerEl.querySelector('.lus-name');
+    if (nameEl) {
+      var arrow = nameEl.querySelector('.lus-arrow');
+      if (!arrow) {
+        arrow = document.createElement('span');
+        arrow.className = 'lus-arrow';
+        arrow.style.cssText = 'font-size:10px;color:var(--muted);transition:transform 0.2s;display:inline-block;';
+        arrow.textContent = '▼';
+        nameEl.appendChild(arrow);
+      }
+      arrow.style.transform = body.classList.contains('lus-collapsed') ? 'rotate(-90deg)' : 'rotate(0)';
+    }
+  };
+
   window.analyzeStock = function() {
     var btn = event.target;
     var originalText = btn.textContent;

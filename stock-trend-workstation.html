@@ -1070,6 +1070,99 @@
     margin-bottom: 16px;
   }
 
+  /* Limit-Up Stocks by Sector */
+  .limit-up-sector-groups {
+    margin-top: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .limit-up-sector-group {
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+  .limit-up-sector-group:hover { border-color: rgba(99,102,241,0.3); }
+  .limit-up-sector-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 14px;
+    background: rgba(99,102,241,0.04);
+    border-bottom: 1px solid var(--rule);
+    cursor: pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .limit-up-sector-header .lus-name {
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .limit-up-sector-header .lus-count {
+    font-size: 11px;
+    color: var(--up);
+    background: rgba(239,68,68,0.1);
+    padding: 1px 8px;
+    border-radius: 10px;
+    font-weight: 600;
+  }
+  .limit-up-sector-header .lus-pct {
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .limit-up-sector-body {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    padding: 10px 14px;
+  }
+  .limit-up-sector-body .lus-stock {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 3px 10px 3px 8px;
+    border-radius: 6px;
+    background: rgba(239,68,68,0.06);
+    border: 1px solid rgba(239,68,68,0.12);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s;
+    -webkit-tap-highlight-color: transparent;
+  }
+  .limit-up-sector-body .lus-stock:hover {
+    background: rgba(239,68,68,0.12);
+    transform: translateY(-1px);
+  }
+  .limit-up-sector-body .lus-stock .lus-code {
+    font-family: 'JetBrainsMono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+  .limit-up-sector-body .lus-stock .lus-name {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .limit-up-sector-body .lus-stock .lus-board {
+    font-size: 9px;
+    padding: 0 4px;
+    border-radius: 3px;
+    font-weight: 600;
+  }
+  .limit-up-sector-body .lus-stock .lus-board.b1 { background: rgba(239,68,68,0.2); color: var(--up); }
+  .limit-up-sector-body .lus-stock .lus-board.b2 { background: rgba(245,158,11,0.2); color: var(--warning); }
+  .limit-up-sector-body .lus-stock .lus-board.b3 { background: rgba(139,92,246,0.2); color: #7c3aed; }
+  .limit-up-sector-body .lus-stock .lus-board.b4plus { background: linear-gradient(135deg, rgba(239,68,68,0.25), rgba(139,92,246,0.25)); color: #7c3aed; }
+  .limit-up-sector-body .lus-stock .lus-seal-time {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: 'JetBrainsMono', monospace;
+  }
+  .limit-up-sector-body .lus-collapsed { display: none; }
+
   /* Failed Board Table */
   .failed-board-wrap {
     background: var(--bg2);
@@ -3127,6 +3220,359 @@
             <figcaption>涨停股板块归属分布</figcaption>
             <div id="chart-sector-dist" class="chart-container tall"></div>
           </figure>
+
+          <!-- 涨停股按板块分类 -->
+          <div class="limit-up-sector-groups" id="limit-up-sector-groups">
+            <!-- 养殖业 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>🌾</span> 养殖业/食品</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 34.1%</span>
+                  <span class="lus-count">14只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('000876 新希望')">
+                  <span class="lus-board b3">3板</span>
+                  <span class="lus-code">000876</span>
+                  <span class="lus-name">新希望</span>
+                  <span class="lus-seal-time">09:31</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002124 天邦食品')">
+                  <span class="lus-board b2">2板</span>
+                  <span class="lus-code">002124</span>
+                  <span class="lus-name">天邦食品</span>
+                  <span class="lus-seal-time">09:34</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002702 海欣食品')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002702</span>
+                  <span class="lus-name">海欣食品</span>
+                  <span class="lus-seal-time">09:37</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002330 得利斯')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002330</span>
+                  <span class="lus-name">得利斯</span>
+                  <span class="lus-seal-time">09:52</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002321 华英农业')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002321</span>
+                  <span class="lus-name">华英农业</span>
+                  <span class="lus-seal-time">10:05</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002458 益生股份')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002458</span>
+                  <span class="lus-name">益生股份</span>
+                  <span class="lus-seal-time">10:18</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002234 民和股份')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002234</span>
+                  <span class="lus-name">民和股份</span>
+                  <span class="lus-seal-time">10:31</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002311 圣农发展')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002311</span>
+                  <span class="lus-name">圣农发展</span>
+                  <span class="lus-seal-time">10:44</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002714 牧原股份')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002714</span>
+                  <span class="lus-name">牧原股份</span>
+                  <span class="lus-seal-time">11:02</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('300498 温氏股份')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">300498</span>
+                  <span class="lus-name">温氏股份</span>
+                  <span class="lus-seal-time">13:15</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002726 龙大美食')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002726</span>
+                  <span class="lus-name">龙大美食</span>
+                  <span class="lus-seal-time">13:28</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600977 新五丰')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600977</span>
+                  <span class="lus-name">新五丰</span>
+                  <span class="lus-seal-time">13:41</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002567 唐人神')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002567</span>
+                  <span class="lus-name">唐人神</span>
+                  <span class="lus-seal-time">14:05</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('000702 正虹科技')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">000702</span>
+                  <span class="lus-name">正虹科技</span>
+                  <span class="lus-seal-time">14:22</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 传媒/出版 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>📚</span> 传媒/出版</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 12.2%</span>
+                  <span class="lus-count">5只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('605577 龙版传媒')">
+                  <span class="lus-board b4plus">5板</span>
+                  <span class="lus-code">605577</span>
+                  <span class="lus-name">龙版传媒</span>
+                  <span class="lus-seal-time">09:30</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600880 博瑞传播')">
+                  <span class="lus-board b2">2板</span>
+                  <span class="lus-code">600880</span>
+                  <span class="lus-name">博瑞传播</span>
+                  <span class="lus-seal-time">09:42</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('000719 中原传媒')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">000719</span>
+                  <span class="lus-name">中原传媒</span>
+                  <span class="lus-seal-time">10:15</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600633 浙数文化')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600633</span>
+                  <span class="lus-name">浙数文化</span>
+                  <span class="lus-seal-time">13:35</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('601099 太平洋')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">601099</span>
+                  <span class="lus-name">中文传媒</span>
+                  <span class="lus-seal-time">14:10</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 科技/电子 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>💻</span> 科技/电子</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 9.8%</span>
+                  <span class="lus-count">4只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('002369 卓翼科技')">
+                  <span class="lus-board b2">2板</span>
+                  <span class="lus-code">002369</span>
+                  <span class="lus-name">卓翼科技</span>
+                  <span class="lus-seal-time">09:45</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002446 盛路通信')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002446</span>
+                  <span class="lus-name">盛路通信</span>
+                  <span class="lus-seal-time">10:22</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('300565 科信技术')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">300565</span>
+                  <span class="lus-name">科信技术</span>
+                  <span class="lus-seal-time">13:48</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('300738 奥飞数据')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">300738</span>
+                  <span class="lus-name">奥飞数据</span>
+                  <span class="lus-seal-time">14:15</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 能源/化工 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>⚡</span> 能源/化工</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 7.3%</span>
+                  <span class="lus-count">3只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('002827 高争民爆')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002827</span>
+                  <span class="lus-name">高争民爆</span>
+                  <span class="lus-seal-time">10:08</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002360 同德化工')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002360</span>
+                  <span class="lus-name">同德化工</span>
+                  <span class="lus-seal-time">13:22</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600328 中盐化工')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600328</span>
+                  <span class="lus-name">中盐化工</span>
+                  <span class="lus-seal-time">14:30</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 酒店/旅游 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>🏨</span> 酒店/旅游</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 4.9%</span>
+                  <span class="lus-count">2只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('000796 凯撒旅业')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">000796</span>
+                  <span class="lus-name">凯撒旅业</span>
+                  <span class="lus-seal-time">10:35</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600054 黄山旅游')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600054</span>
+                  <span class="lus-name">黄山旅游</span>
+                  <span class="lus-seal-time">13:55</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 水泥/建材 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>🏗️</span> 水泥/建材</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 2.4%</span>
+                  <span class="lus-count">1只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('600801 华新水泥')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600801</span>
+                  <span class="lus-name">华新水泥</span>
+                  <span class="lus-seal-time">14:40</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- 其他 -->
+            <div class="limit-up-sector-group">
+              <div class="limit-up-sector-header" onclick="toggleSectorGroup(this)">
+                <div class="lus-name"><span>📦</span> 其他板块</div>
+                <div style="display:flex;align-items:center;gap:8px;">
+                  <span class="lus-pct">占比 29.3%</span>
+                  <span class="lus-count">12只</span>
+                </div>
+              </div>
+              <div class="limit-up-sector-body">
+                <div class="lus-stock" onclick="goToAnalysis('600059 古越龙山')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600059</span>
+                  <span class="lus-name">古越龙山</span>
+                  <span class="lus-seal-time">10:12</span>
+                  <span style="font-size:9px;color:var(--muted);">黄酒</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('601579 会稽山')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">601579</span>
+                  <span class="lus-name">会稽山</span>
+                  <span class="lus-seal-time">10:25</span>
+                  <span style="font-size:9px;color:var(--muted);">黄酒</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600223 鲁商发展')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600223</span>
+                  <span class="lus-name">鲁商发展</span>
+                  <span class="lus-seal-time">10:38</span>
+                  <span style="font-size:9px;color:var(--muted);">地产</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('000965 天保基建')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">000965</span>
+                  <span class="lus-name">天保基建</span>
+                  <span class="lus-seal-time">11:05</span>
+                  <span style="font-size:9px;color:var(--muted);">地产</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002657 高科集团')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002657</span>
+                  <span class="lus-name">高科集团</span>
+                  <span class="lus-seal-time">13:12</span>
+                  <span style="font-size:9px;color:var(--muted);">基建</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('600520 文一科技')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">600520</span>
+                  <span class="lus-name">文一科技</span>
+                  <span class="lus-seal-time">13:25</span>
+                  <span style="font-size:9px;color:var(--muted);">机械</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('002829 星网宇达')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">002829</span>
+                  <span class="lus-name">星网宇达</span>
+                  <span class="lus-seal-time">13:38</span>
+                  <span style="font-size:9px;color:var(--muted);">军工</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('300065 海兰信')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">300065</span>
+                  <span class="lus-name">海兰信</span>
+                  <span class="lus-seal-time">13:52</span>
+                  <span style="font-size:9px;color:var(--muted);">航海</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('300371 永贵电器')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">300371</span>
+                  <span class="lus-name">永贵电器</span>
+                  <span class="lus-seal-time">14:08</span>
+                  <span style="font-size:9px;color:var(--muted);">电气</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('300549 优刻得')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">300549</span>
+                  <span class="lus-name">优刻得</span>
+                  <span class="lus-seal-time">14:18</span>
+                  <span style="font-size:9px;color:var(--muted);">云计算</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('688083 中望软件')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">688083</span>
+                  <span class="lus-name">中望软件</span>
+                  <span class="lus-seal-time">14:28</span>
+                  <span style="font-size:9px;color:var(--muted);">软件</span>
+                </div>
+                <div class="lus-stock" onclick="goToAnalysis('688560 明冠新材')">
+                  <span class="lus-board b1">1板</span>
+                  <span class="lus-code">688560</span>
+                  <span class="lus-name">明冠新材</span>
+                  <span class="lus-seal-time">14:45</span>
+                  <span style="font-size:9px;color:var(--muted);">材料</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
           <div class="reasoning-box" style="margin-top:12px;">
             <strong>板块轮动方向：</strong>
             <br>今日涨停股集中在<strong>农业养殖/食品消费</strong>板块（14只，占比34.1%），新希望、天邦食品、海欣食品、新五丰等多只个股涨停，
