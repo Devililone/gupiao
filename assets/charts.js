@@ -359,35 +359,35 @@
         backgroundColor: 'rgba(255,255,255,0.95)',
         borderColor: rule,
         borderWidth: 1,
-        textStyle: { color: ink, fontSize: 12 },
+        textStyle: { color: ink, fontSize: 11 },
         formatter: function(params) {
           return params.name + ': ' + params.value + '只 (' + sectorDistData[params.dataIndex].pct + ')';
         }
       },
-      grid: { left: 80, right: 50, top: 10, bottom: 20 },
+      grid: { left: 90, right: 50, top: 6, bottom: 8 },
       xAxis: {
         type: 'value',
         axisLine: { lineStyle: { color: rule } },
-        axisLabel: { color: muted, fontSize: 11 },
+        axisLabel: { color: muted, fontSize: 10 },
         splitLine: { lineStyle: { color: rule, type: 'dashed' } }
       },
       yAxis: {
         type: 'category',
         data: sectorDistData.map(function(d) { return d.name; }),
         axisLine: { lineStyle: { color: rule } },
-        axisLabel: { color: ink, fontSize: 11 },
+        axisLabel: { color: ink, fontSize: 10 },
         inverse: true
       },
       series: [{
         type: 'bar',
         data: sectorDistData.map(function(d) { return d.count; }),
-        barWidth: 18,
+        barWidth: 12,
         itemStyle: {
           color: function(params) {
             var colors = ['#ef4444', '#f59e0b', '#6366f1', '#10b981', '#3b82f6', '#8b5cf6', '#6b7280'];
             return colors[params.dataIndex];
           },
-          borderRadius: [0, 6, 6, 0]
+          borderRadius: [0, 5, 5, 0]
         },
         label: {
           show: true,
@@ -396,7 +396,7 @@
             return params.value + '只 ' + sectorDistData[params.dataIndex].pct;
           },
           color: muted,
-          fontSize: 11
+          fontSize: 10
         }
       }]
     });
