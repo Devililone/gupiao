@@ -1072,7 +1072,15 @@
   }
   .ladder-stock-row:last-child { border-bottom: none; }
   .ladder-stock-row:hover { background: rgba(99,102,241,0.06); }
-  .ladder-stock-name { font-weight: 500; color: var(--ink); }
+  .ladder-stock-name { font-weight: 500; color: var(--ink); display: flex; align-items: center; gap: 4px; }
+  .ladder-stock-sector {
+    font-size: 9px;
+    font-weight: 400;
+    color: var(--muted);
+    background: rgba(148,163,184,0.15);
+    padding: 1px 4px;
+    border-radius: 3px;
+  }
   .ladder-stock-change { font-family: 'JetBrainsMono', monospace; font-weight: 600; }
   .ladder-stock-change.up { color: var(--up); }
   .ladder-stock-change.down { color: var(--down); }

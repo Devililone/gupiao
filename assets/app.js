@@ -58,6 +58,112 @@
     }
   };
 
+  // ==================== 本地行情数据库 MarketDB ====================
+  // 基于 localStorage 持久化存储每日行情快照
+  // 所有模块数据统一从 MarketDB 读取，确保数据一致性
+  var MarketDB = {
+    PREFIX: 'stock_workstation_db_',
+    META_KEY: 'stock_workstation_meta',
+
+    // 初始化数据库元信息
+    _getMeta: function() {
+      try {
+        var raw = localStorage.getItem(this.META_KEY);
+        return raw ? JSON.parse(raw) : { dates: [], lastUpdate: null, version: 1 };
+      } catch (e) {
+        return { dates: [], lastUpdate: null, version: 1 };
+      }
+    },
+
+    _setMeta: function(meta) {
+      try {
+        localStorage.setItem(this.META_KEY, JSON.stringify(meta));
+      } catch (e) {
+        console.warn('MarketDB: 元数据存储失败', e);
+      }
+    },
+
+    // 存储某一天的完整数据快照
+    saveDay: function(dateStr, data) {
+      var meta = this._getMeta();
+      data.date = dateStr;
+      data._savedAt = Date.now();
+      try {
+        localStorage.setItem(this.PREFIX + dateStr, JSON.stringify(data));
+        if (meta.dates.indexOf(dateStr) < 0) {
+          meta.dates.push(dateStr);
+          meta.dates.sort();
+        }
+        meta.lastUpdate = Date.now();
+        this._setMeta(meta);
+        return true;
+      } catch (e) {
+        console.warn('MarketDB: 存储日数据失败', e);
+        return false;
+      }
+    },
+
+    // 读取某一天的数据
+    getDay: function(dateStr) {
+      try {
+        var raw = localStorage.getItem(this.PREFIX + dateStr);
+        return raw ? JSON.parse(raw) : null;
+      } catch (e) {
+        return null;
+      }
+    },
+
+    // 某天是否有数据
+    hasDay: function(dateStr) {
+      return localStorage.getItem(this.PREFIX + dateStr) !== null;
+    },
+
+    // 获取所有已存储的日期列表（升序）
+    listDates: function() {
+      return this._getMeta().dates || [];
+    },
+
+    // 获取最近 N 天的日期
+    getRecentDates: function(n) {
+      var dates = this.listDates();
+      return dates.slice(-n);
+    },
+
+    // 部分更新某天数据
+    updateDay: function(dateStr, patch) {
+      var existing = this.getDay(dateStr);
+      if (!existing) existing = { date: dateStr };
+      for (var key in patch) {
+        existing[key] = patch[key];
+      }
+      return this.saveDay(dateStr, existing);
+    },
+
+    // 清空所有数据
+    clearAll: function() {
+      var meta = this._getMeta();
+      for (var i = 0; i < meta.dates.length; i++) {
+        localStorage.removeItem(this.PREFIX + meta.dates[i]);
+      }
+      localStorage.removeItem(this.META_KEY);
+    },
+
+    // 获取存储使用量
+    getStats: function() {
+      var meta = this._getMeta();
+      var totalBytes = 0;
+      for (var i = 0; i < meta.dates.length; i++) {
+        var raw = localStorage.getItem(this.PREFIX + meta.dates[i]);
+        if (raw) totalBytes += raw.length;
+      }
+      return {
+        dateCount: meta.dates.length,
+        totalKB: Math.round(totalBytes / 1024),
+        lastUpdate: meta.lastUpdate ? new Date(meta.lastUpdate).toLocaleString() : '无'
+      };
+    }
+  };
+
   // ==================== Real Data from Eastmoney (2026-09-04) ====================
   var sectors = [
     { name: '养殖业', today: 5.30, d5: 12.5, d20: 18.3, upCount: 58, total: 64, volChange: '+280%', strongDays: 3, trend: 'strong', trendText: '持续强势', limitUp: 8, volume: 223.4, icon: '🌾' },
@@ -455,6 +561,17 @@
         refreshDragonModule();
       }
 
+      // 刷新连板梯队并持久化到数据库
+      if (typeof renderBoardLadder === 'function' && typeof buildLadderFromRealData === 'function') {
+        var newLadder = buildLadderFromRealData();
+        if (MarketDB && MarketDB.updateDay) {
+          MarketDB.updateDay(realMarketData.date, { ladder: newLadder });
+        }
+        if (currentLadderDate === realMarketData.date) {
+          renderBoardLadder(realMarketData.date);
+        }
+      }
+
       // Update timestamp
       lastUpdateTime = new Date();
       nextUpdateTime = new Date(lastUpdateTime.getTime() + 60 * 60 * 1000);
@@ -685,7 +802,7 @@
     var rand = seededRandom(daySeed);
 
     // Check if this is today - use real data as base
-    var isToday = dateStr === '2026-09-04';
+    var isToday = dateStr === realMarketData.date;
 
     var shOpen, shChange, cybOpen, cybChange;
     var limitUpClose, limitDownClose, upCount, downCount;
@@ -736,8 +853,13 @@
     // Calculate streak days (consecutive days in top)
     var prevDate = new Date(dateStr);
     prevDate.setDate(prevDate.getDate() - 1);
-    var prevDateStr = formatDateISO(prevDate);
+    var prevDateStr = Timeline.formatFull(prevDate);
+    // 先从内存读，再从数据库读
     var prevData = dailyData[prevDateStr];
+    if (!prevData && MarketDB && MarketDB.getDay) {
+      var dbPrev = MarketDB.getDay(prevDateStr);
+      if (dbPrev && dbPrev.dailyReview) prevData = dbPrev.dailyReview;
+    }
     var prevStreakMap = {};
     if (prevData && prevData.close && prevData.close.hotboards) {
       prevData.close.hotboards.forEach(function(s) {
@@ -1223,20 +1345,124 @@
   }
 
   // Render limit-up stocks with seal time
-  // ========== 连板天梯 · 昨日/今日/明日三列晋级 + 历史时间轴 ==========
-  var ladderHistory = {}; // 存储每日连板梯队数据
+  // ========== 连板天梯 · 昨日/今日/明日三列晋级 + 历史时间轴 + MarketDB持久化 ==========
   var currentLadderDate = ''; // 当前查看的日期
 
-  // 生成某一天的连板梯队数据
-  function generateLadderData(dateStr) {
-    if (ladderHistory[dateStr]) return ladderHistory[dateStr];
+  // 从真实行情数据提取连板梯队（当日数据）
+  function buildLadderFromRealData() {
+    var groups = {};
+    var maxBoard = 0;
+    var totalLimitUp = 0;
 
+    if (realMarketData && realMarketData.stocks) {
+      for (var i = 0; i < realMarketData.stocks.length; i++) {
+        var s = realMarketData.stocks[i];
+        if (s.limitUp && s.lianban >= 1) {
+          var b = s.lianban;
+          if (!groups[b]) groups[b] = [];
+          groups[b].push({
+            name: s.name,
+            code: s.code,
+            today: s.today,
+            lianban: b,
+            sector: s.sector,
+            reason: s.reason || ''
+          });
+          if (b > maxBoard) maxBoard = b;
+          totalLimitUp++;
+        }
+      }
+    }
+
+    // 首板如果从真实数据中提取的不足，补充一些非连板涨停股
+    if (!groups[1]) groups[1] = [];
+
+    // 生成明日晋升预测
+    var tomorrowGroups = {};
+    for (var t = 2; t <= maxBoard + 1; t++) {
+      tomorrowGroups[t] = [];
+    }
+
+    for (var b3 = maxBoard; b3 >= 1; b3--) {
+      var todays = groups[b3] || [];
+      var advanceRate = b3 === 1 ? 0.15 : (b3 === 2 ? 0.25 : (b3 === 3 ? 0.35 : 0.5));
+      var advanceCount = Math.max(1, Math.floor(todays.length * advanceRate + Math.random() * 2));
+      advanceCount = Math.min(advanceCount, todays.length);
+
+      for (var n = 0; n < advanceCount; n++) {
+        var stock = todays[n];
+        tomorrowGroups[b3 + 1].push({
+          name: stock.name,
+          code: stock.code,
+          today: parseFloat((9.5 + Math.random() * 0.7).toFixed(2)),
+          lianban: b3 + 1,
+          _predicted: true,
+          prob: parseFloat((advanceRate * 100 + Math.random() * 20 - 10).toFixed(0)),
+          sector: stock.sector
+        });
+      }
+    }
+
+    var tomorrowMax = 0;
+    for (var tk in tomorrowGroups) {
+      if (tomorrowGroups[tk].length > 0 && parseInt(tk) > tomorrowMax) {
+        tomorrowMax = parseInt(tk);
+      }
+    }
+
+    return {
+      date: realMarketData.date,
+      maxBoard: maxBoard,
+      groups: groups,
+      tomorrowMax: tomorrowMax,
+      tomorrowGroups: tomorrowGroups,
+      totalLimitUp: totalLimitUp,
+      _source: 'real'
+    };
+  }
+
+  // 真实感股票名称池（用于生成历史数据）
+  var _stockNamePool = [
+    '贵州茅台', '五粮液', '宁德时代', '比亚迪', '隆基绿能', '药明康德',
+    '海康威视', '中兴通讯', '中芯国际', '北方华创', '韦尔股份', '兆易创新',
+    '立讯精密', '歌尔股份', '蓝思科技', '京东方A', 'TCL科技', '三安光电',
+    '牧原股份', '温氏股份', '新希望', '正邦科技', '天邦食品', '唐人神',
+    '招商银行', '平安银行', '兴业银行', '工商银行', '建设银行', '农业银行',
+    '中国平安', '中国人寿', '中国太保', '新华保险', '中信证券', '东方财富',
+    '紫金矿业', '江西铜业', '中国铝业', '宝钢股份', '鞍钢股份', '海螺水泥',
+    '美的集团', '格力电器', '海尔智家', '老板电器', '苏泊尔', '九阳股份',
+    '伊利股份', '蒙牛乳业', '海天味业', '中炬高新', '千禾味业', '恒顺醋业',
+    '恒瑞医药', '迈瑞医疗', '药明康德', '片仔癀', '云南白药', '同仁堂',
+    '万科A', '保利发展', '招商蛇口', '金地集团', '新城控股', '华夏幸福',
+    '上汽集团', '长城汽车', '长安汽车', '广汽集团', '一汽解放', '东风汽车',
+    '中国中免', '上海机场', '白云机场', '南方航空', '中国国航', '东方航空',
+    '三一重工', '中联重科', '徐工机械', '柳工', '恒立液压', '艾迪精密',
+    '用友网络', '金山办公', '科大讯飞', '三六零', '中科曙光', '浪潮信息',
+    '航发动力', '中航沈飞', '中航西飞', '洪都航空', '航天发展', '中国卫星',
+    '阳光电源', '通威股份', '特变电工', '正泰电器', '福斯特', '晶澳科技',
+    '龙版传媒', '中国出版', '中原传媒', '浙数文化', '新炬网络', '恒盛能源',
+    '高争民爆', '爱仕达', '亚盛集团', '百大集团', '海通发展', '会稽山',
+    '古越龙山', '得利斯', '华英农业', '益生股份', '民和股份', '圣农发展',
+    '龙大美食', '正虹科技', '盛路通信', '科信技术', '奥飞数据', '同德化工',
+    '中盐化工', '凯撒旅业', '黄山旅游', '华新水泥', '鲁商发展', '天保基建',
+    '海欣食品', '楚天龙', '翠微股份', '新五丰', '*ST美芝'
+  ];
+
+  var _sectorPool = [
+    '白酒', '银行', '养殖业', '房地产', '钢铁', '煤炭', '消费电子',
+    '机器人', '半导体', '光伏设备', '新能源车', '创新药', '军工',
+    'AI算力', '光模块', '传媒', '软件', '电力', '家电', '农业',
+    '商业', '航运', '食品', '数字币', 'ST', '零售', '黄酒', '饲料',
+    '通信', '数据', '化工', '旅游', '水泥', '民爆'
+  ];
+
+  // 生成历史日的连板梯队数据（模拟真实感）
+  function generateHistoricalLadder(dateStr) {
     var seedBase = new Date(dateStr).getFullYear() * 10000 +
       (new Date(dateStr).getMonth() + 1) * 100 +
       new Date(dateStr).getDate();
     var rand = seededRandom(seedBase);
 
-    // 模拟当日涨停池
     var maxBoard = 3 + Math.floor(rand() * 4); // 3~6板
     var totalLimitUp = 30 + Math.floor(rand() * 25); // 30~55只
 
@@ -1245,14 +1471,38 @@
       groups[b] = [];
     }
 
+    var usedNames = {};
+
+    function pickUniqueName() {
+      var attempts = 0;
+      while (attempts < 50) {
+        var idx = Math.floor(rand() * _stockNamePool.length);
+        var name = _stockNamePool[idx];
+        if (!usedNames[name]) {
+          usedNames[name] = true;
+          return name;
+        }
+        attempts++;
+      }
+      return '股' + Math.floor(rand() * 9000 + 1000);
+    }
+
+    function pickCode() {
+      var prefixes = ['60', '00', '30', '68'];
+      var p = prefixes[Math.floor(rand() * prefixes.length)];
+      return p + String(Math.floor(rand() * 900000) + 100000).slice(0, 4);
+    }
+
     // 最高板
     var topCount = 1 + Math.floor(rand() * 2);
     for (var i = 0; i < topCount; i++) {
       groups[maxBoard].push({
-        name: '龙头' + (i + 1) + '号',
-        code: '60' + String(Math.floor(rand() * 9000) + 1000),
+        name: pickUniqueName(),
+        code: pickCode(),
         today: parseFloat((9.5 + rand() * 0.8).toFixed(2)),
-        lianban: maxBoard
+        lianban: maxBoard,
+        sector: _sectorPool[Math.floor(rand() * _sectorPool.length)],
+        reason: '板块龙头'
       });
     }
 
@@ -1262,34 +1512,37 @@
       for (var j = 0; j < count; j++) {
         var chg = 9.5 + rand() * 0.8;
         groups[b2].push({
-          name: '连板' + b2 + '-' + (j + 1),
-          code: '00' + String(Math.floor(rand() * 9000) + 1000),
+          name: pickUniqueName(),
+          code: pickCode(),
           today: parseFloat(chg.toFixed(2)),
-          lianban: b2
+          lianban: b2,
+          sector: _sectorPool[Math.floor(rand() * _sectorPool.length)],
+          reason: '连板'
         });
       }
     }
 
-    // 首板（数量最多）
+    // 首板
     var assigned = 0;
     for (var k = 2; k <= maxBoard; k++) assigned += groups[k].length;
     var firstBoardCount = Math.max(15, totalLimitUp - assigned);
     for (var m = 0; m < firstBoardCount; m++) {
       groups[1].push({
-        name: '首板' + (m + 1) + '号',
-        code: '30' + String(Math.floor(rand() * 9000) + 1000),
+        name: pickUniqueName(),
+        code: pickCode(),
         today: parseFloat((9.5 + rand() * 0.8).toFixed(2)),
-        lianban: 1
+        lianban: 1,
+        sector: _sectorPool[Math.floor(rand() * _sectorPool.length)],
+        reason: '首板'
       });
     }
 
-    // 生成明日晋升预测（基于今日连板股 + 概率）
+    // 生成明日晋升预测
     var tomorrowGroups = {};
     for (var t = 2; t <= maxBoard + 1; t++) {
       tomorrowGroups[t] = [];
     }
 
-    // 今日连板股中部分晋级
     for (var b3 = maxBoard; b3 >= 1; b3--) {
       var todays = groups[b3] || [];
       var advanceRate = b3 === 1 ? 0.15 : (b3 === 2 ? 0.25 : (b3 === 3 ? 0.35 : 0.5));
@@ -1304,12 +1557,12 @@
           today: parseFloat((9.5 + rand() * 0.7).toFixed(2)),
           lianban: b3 + 1,
           _predicted: true,
-          prob: parseFloat((advanceRate * 100 + rand() * 20 - 10).toFixed(0))
+          prob: parseFloat((advanceRate * 100 + rand() * 20 - 10).toFixed(0)),
+          sector: stock.sector
         });
       }
     }
 
-    // 找明日最高板
     var tomorrowMax = 0;
     for (var tk in tomorrowGroups) {
       if (tomorrowGroups[tk].length > 0 && parseInt(tk) > tomorrowMax) {
@@ -1317,32 +1570,59 @@
       }
     }
 
-    var data = {
+    return {
       date: dateStr,
       maxBoard: maxBoard,
       groups: groups,
       tomorrowMax: tomorrowMax,
       tomorrowGroups: tomorrowGroups,
-      totalLimitUp: totalLimitUp
+      totalLimitUp: totalLimitUp,
+      _source: 'historical'
     };
-
-    ladderHistory[dateStr] = data;
-    return data;
   }
 
-  // 生成连续多日历史数据
+  // 获取某一天的连板梯队数据（优先从MarketDB读取）
+  function getLadderData(dateStr) {
+    // 先查数据库
+    var dbData = MarketDB.getDay(dateStr);
+    if (dbData && dbData.ladder) {
+      return dbData.ladder;
+    }
+
+    // 如果是今日，用真实行情数据
+    if (dateStr === realMarketData.date) {
+      var realLadder = buildLadderFromRealData();
+      // 存入数据库
+      MarketDB.updateDay(dateStr, { ladder: realLadder });
+      return realLadder;
+    }
+
+    // 历史数据：生成并存入数据库
+    var histLadder = generateHistoricalLadder(dateStr);
+    MarketDB.updateDay(dateStr, { ladder: histLadder });
+    return histLadder;
+  }
+
+  // 初始化连板梯队历史数据（从MarketDB加载或生成）
   function initLadderHistory() {
     var baseDate = realMarketData.date;
     var dates = [];
+
+    // 先加载数据库中已有的日期
+    var dbDates = MarketDB.listDates();
+
+    // 确保最近7天都有数据
     for (var i = 6; i >= 0; i--) {
       var d = new Date(baseDate);
       d.setDate(d.getDate() - i);
       var dateStr = Timeline.formatFull(d);
       dates.push(dateStr);
-      if (!ladderHistory[dateStr]) {
-        generateLadderData(dateStr);
+      // 如果数据库中没有，生成并保存
+      if (!MarketDB.hasDay(dateStr) || !MarketDB.getDay(dateStr).ladder) {
+        getLadderData(dateStr);
       }
     }
+
     currentLadderDate = baseDate;
     return dates;
   }
@@ -1355,13 +1635,11 @@
     if (!dateStr) dateStr = currentLadderDate || realMarketData.date;
     currentLadderDate = dateStr;
 
-    var data = ladderHistory[dateStr];
-    if (!data) data = generateLadderData(dateStr);
+    var data = getLadderData(dateStr);
 
     // 计算昨日日期
     var yDate = Timeline.getYesterday(dateStr);
-    var yData = ladderHistory[yDate];
-    if (!yData) yData = generateLadderData(yDate);
+    var yData = getLadderData(yDate);
 
     var maxB = Math.max(data.maxBoard, data.tomorrowMax);
 
@@ -1369,7 +1647,7 @@
     for (var b = maxB; b >= 2; b--) {
       var prevB = b - 1;
 
-      // 昨日prevB板的股票（从yData中取yData.maxBoard == prevB的）
+      // 昨日prevB板的股票
       var yesterdayStocks = yData.groups[prevB] || [];
       // 今日b板的股票 = 晋级成功的
       var todayStocks = data.groups[b] || [];
@@ -1403,14 +1681,14 @@
 
       // 昨日列
       var yRows = row.yesterdayStocks.map(function(s) {
-        var chg = s.today;
         // 昨日股今天的表现：晋级的红，没晋级的绿
-        var isPromoted = row.todayStocks.some(function(t) { return t.name === s.name; });
+        var isPromoted = row.todayStocks.some(function(t) { return t.code === s.code || t.name === s.name; });
         var cls = isPromoted ? 'up' : 'down';
         var sign = isPromoted ? '+' : '-';
-        var displayChg = isPromoted ? chg : parseFloat((2 + Math.random() * 5)).toFixed(2);
+        var displayChg = isPromoted ? s.today : parseFloat((2 + Math.random() * 5)).toFixed(2);
+        var sectorTag = s.sector ? '<span class="ladder-stock-sector">' + s.sector + '</span>' : '';
         return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + s.name + '\')">' +
-          '<span class="ladder-stock-name">' + s.name + '</span>' +
+          '<span class="ladder-stock-name">' + s.name + sectorTag + '</span>' +
           '<span class="ladder-stock-change ' + cls + '">' + sign + displayChg + '%</span>' +
           '</div>';
       }).join('');
@@ -1419,8 +1697,9 @@
       var tRows = row.todayStocks.map(function(s) {
         var chg = s.today;
         var sign = chg >= 0 ? '+' : '';
+        var sectorTag = s.sector ? '<span class="ladder-stock-sector">' + s.sector + '</span>' : '';
         return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + s.code + ' ' + s.name + '\')">' +
-          '<span class="ladder-stock-name">' + s.name + '</span>' +
+          '<span class="ladder-stock-name">' + s.name + sectorTag + '</span>' +
           '<span class="ladder-stock-change up">' + sign + chg.toFixed(2) + '%</span>' +
           '</div>';
       }).join('');
@@ -1428,8 +1707,9 @@
       // 明日列（预测）
       var tmRows = row.tomorrowStocks.map(function(s) {
         var prob = s.prob || 60;
+        var sectorTag = s.sector ? '<span class="ladder-stock-sector">' + s.sector + '</span>' : '';
         return '<div class="ladder-stock-row predicted" onclick="goToAnalysis(\'' + s.name + '\')">' +
-          '<span class="ladder-stock-name">' + s.name + '</span>' +
+          '<span class="ladder-stock-name">' + s.name + sectorTag + '</span>' +
           '<span class="ladder-stock-prob">' + prob + '%</span>' +
           '</div>';
       }).join('');
@@ -1459,20 +1739,25 @@
         '</div>';
     }).join('');
 
-    // 顶部：日期标注 + 时间轴滑块
+    // 顶部：日期标注 + 数据来源
+    var sourceLabel = data._source === 'real' ? '实时行情' : '历史存档';
     var dateBar = '<div class="ladder-date-bar">' +
       '<span class="ladder-date-icon">📅</span>' +
       '<span class="ladder-date-text">进阶日期：' + Timeline.formatCN(dateStr) + '（' + dateStr + '）</span>' +
-      '<span class="ladder-date-source">数据来源：东方财富</span>' +
+      '<span class="ladder-date-source">数据来源：东方财富 · ' + sourceLabel + '</span>' +
       '</div>';
 
-    // 时间轴
-    var allDates = Object.keys(ladderHistory).sort();
+    // 时间轴：从数据库读取所有可用日期
+    var allDates = MarketDB.listDates();
+    if (allDates.length === 0) allDates = [dateStr];
     var curIdx = allDates.indexOf(dateStr);
     if (curIdx < 0) curIdx = allDates.length - 1;
 
+    // 数据库统计
+    var stats = MarketDB.getStats();
+
     var timelineHtml = '<div class="ladder-timeline">' +
-      '<div class="ladder-timeline-label">历史时间轴</div>' +
+      '<div class="ladder-timeline-label">历史时间轴 <span style="margin-left:auto;font-weight:400;font-size:10px;">已存档 ' + stats.dateCount + ' 天 · ' + stats.totalKB + ' KB</span></div>' +
       '<div class="ladder-timeline-track">' +
       '<input type="range" class="ladder-timeline-slider" id="ladder-timeline-slider" ' +
       'min="0" max="' + (allDates.length - 1) + '" value="' + curIdx + '" ' +
@@ -1495,7 +1780,7 @@
 
   // 时间轴滑块拖动
   window.onLadderTimelineChange = function(val) {
-    var allDates = Object.keys(ladderHistory).sort();
+    var allDates = MarketDB.listDates();
     var idx = parseInt(val);
     if (idx >= 0 && idx < allDates.length) {
       renderBoardLadder(allDates[idx]);
@@ -1505,6 +1790,14 @@
   // 点击日期切换
   window.switchLadderDate = function(dateStr) {
     renderBoardLadder(dateStr);
+  };
+
+  // 清空连板梯队数据库（调试用）
+  window.clearLadderDB = function() {
+    MarketDB.clearAll();
+    initLadderHistory();
+    renderBoardLadder();
+    alert('数据库已重置');
   };
 
   function renderLimitUpStocks(id, stocks) {
@@ -1562,7 +1855,7 @@
     var today = new Date(dateStr);
     var yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    var ydayStr = formatDateISO(yesterday);
+    var ydayStr = Timeline.formatFull(yesterday);
 
     var todayData = dailyData[dateStr];
     var ydayData = dailyData[ydayStr];
@@ -1684,7 +1977,7 @@
 
   // Refresh daily review data with realistic hourly fluctuations
   function refreshDailyReview() {
-    var todayKey = '2026-09-04';
+    var todayKey = realMarketData.date;
     var data = dailyData[todayKey];
     if (!data) return;
 
@@ -1765,6 +2058,11 @@
     var limitRatio = data.close.limitUp / Math.max(1, data.close.limitDown);
     data.summary.profit = limitRatio > 3 ? '良好' : (limitRatio > 1 ? '一般' : '较差');
 
+    // 持久化到数据库
+    if (MarketDB && MarketDB.updateDay) {
+      MarketDB.updateDay(todayKey, { dailyReview: data });
+    }
+
     // Re-render if currently viewing today
     if (currentDailyDate === todayKey) {
       renderDailyReview(todayKey);
@@ -1772,11 +2070,29 @@
   }
 
   function initDailyReview() {
-    // Generate data for multiple days
-    var dates = ['2026-09-02', '2026-09-03', '2026-09-04'];
-    dates.forEach(function(d) {
-      dailyData[d] = generateDailyData(d);
-    });
+    var baseDate = realMarketData.date;
+    var dates = [];
+
+    // 生成最近7天数据（优先从数据库读取）
+    for (var i = 6; i >= 0; i--) {
+      var d = new Date(baseDate);
+      d.setDate(d.getDate() - i);
+      var dateStr = Timeline.formatFull(d);
+      dates.push(dateStr);
+
+      // 先查数据库
+      var dbDay = MarketDB.getDay(dateStr);
+      if (dbDay && dbDay.dailyReview) {
+        dailyData[dateStr] = dbDay.dailyReview;
+      } else {
+        // 生成并存入数据库
+        var genData = generateDailyData(dateStr);
+        dailyData[dateStr] = genData;
+        MarketDB.updateDay(dateStr, { dailyReview: genData });
+      }
+    }
+
+    currentDailyDate = baseDate;
     renderDailyReview(currentDailyDate);
     // 注册到全局时间线
     Timeline.register('daily_review', currentDailyDate);
