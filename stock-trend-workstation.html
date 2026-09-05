@@ -1735,29 +1735,15 @@
     line-height: 1.6;
   }
 
-  /* Emotion summary at top */
-  .emotion-summary-top {
-    background: var(--bg2);
-    border: 1px solid var(--rule);
-    border-radius: 8px;
-    padding: 10px 14px;
-    margin-bottom: 10px;
+  /* Emotion summary phase - content aligned to top */
+  .emotion-summary-phase {
+    align-items: start;
   }
-  .emotion-summary-header {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    margin-bottom: 6px;
-  }
-  .emotion-summary-label {
-    font-size: 12px;
-    font-weight: 700;
-    color: var(--ink);
-  }
-  .emotion-summary-body {
+  .emotion-summary-content {
     display: flex;
     flex-direction: column;
     gap: 6px;
+    align-items: stretch;
   }
   .emotion-summary-chart { margin: 0; }
   .emotion-summary-text {
@@ -4346,21 +4332,6 @@
       <!-- Section 3: Intraday Emotion Timeline -->
       <div class="daily-section">
         <h3 class="daily-section-title">🔹 日内情绪全时段监控</h3>
-
-        <!-- 今日情绪过程总结（移至顶部） -->
-        <div class="emotion-summary-top">
-          <div class="emotion-summary-header">
-            <span class="phase-dot final"></span>
-            <span class="emotion-summary-label">今日情绪过程总结</span>
-          </div>
-          <div class="emotion-summary-body">
-            <div class="emotion-summary-chart">
-              <div id="chart-emotion-timeline" class="chart-container" style="height:160px;"></div>
-            </div>
-            <div class="emotion-summary-text" id="emotion-summary-text">--</div>
-          </div>
-        </div>
-
         <div class="emotion-timeline">
           <!-- 10:00 -->
           <div class="emotion-phase">
@@ -4485,6 +4456,19 @@
             </div>
           </div>
 
+          <!-- 今日情绪过程总结（恢复原位） -->
+          <div class="emotion-phase emotion-summary-phase">
+            <div class="phase-time">
+              <span class="phase-dot final"></span>
+              <span class="phase-label">今日情绪过程总结</span>
+            </div>
+            <div class="phase-content emotion-summary-content">
+              <div class="emotion-summary-chart">
+                <div id="chart-emotion-timeline" class="chart-container" style="height:160px;"></div>
+              </div>
+              <div class="emotion-summary-text" id="emotion-summary-text">--</div>
+            </div>
+          </div>
         </div>
       </div>
 
