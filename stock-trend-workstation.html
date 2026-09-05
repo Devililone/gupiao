@@ -975,90 +975,96 @@
     line-height: 1.7;
   }
 
-  /* Board Ladder */
+  /* Board Ladder - 连板天梯晋级样式 */
   .board-ladder {
     display: flex;
     flex-direction: column;
     gap: 8px;
   }
-  .board-level {
+  .ladder-row {
     display: flex;
-    align-items: flex-start;
-    gap: 12px;
-    padding: 12px 16px;
+    align-items: stretch;
+    gap: 6px;
     background: var(--bg2);
-    backdrop-filter: blur(12px);
     border: 1px solid var(--rule);
-    border-radius: 12px;
-    transition: border-color 0.2s;
-  }
-  .board-level:hover { border-color: rgba(99,102,241,0.3); }
-  .board-level-num {
-    flex-shrink: 0;
-    width: 40px;
-    height: 40px;
     border-radius: 10px;
+    padding: 0;
+    overflow: hidden;
+  }
+  .ladder-col {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+  }
+  .ladder-yesterday {
+    background: rgba(148,163,184,0.08);
+    border-right: 1px solid var(--rule);
+  }
+  .ladder-today {
+    background: linear-gradient(135deg, rgba(239,68,68,0.08), rgba(245,158,11,0.05));
+  }
+  .ladder-extra {
+    flex: 0 0 70px;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 16px;
-    font-weight: 700;
-    font-family: 'JetBrainsMono', monospace;
-    color: white;
+    background: rgba(99,102,241,0.05);
+    border-left: 1px solid var(--rule);
   }
-  .board-level-num.b5 { background: linear-gradient(135deg, #ef4444, #f59e0b); }
-  .board-level-num.b4 { background: linear-gradient(135deg, #f59e0b, #f97316); }
-  .board-level-num.b3 { background: linear-gradient(135deg, #f97316, #eab308); }
-  .board-level-num.b2 { background: linear-gradient(135deg, #eab308, #84cc16); }
-  .board-level-num.b1 { background: linear-gradient(135deg, #84cc16, #22c55e); }
-  .board-level-content { flex: 1; min-width: 0; }
-  .board-level-title {
-    font-size: 13px;
+  .ladder-tier-header {
+    font-size: 12px;
     font-weight: 700;
-    margin-bottom: 6px;
+    text-align: center;
+    padding: 6px 8px;
+    background: rgba(148,163,184,0.15);
+    color: var(--ink);
+    border-bottom: 1px solid var(--rule);
   }
-  .board-stocks {
+  .ladder-tier-header.today {
+    background: linear-gradient(135deg, rgba(239,68,68,0.15), rgba(245,158,11,0.12));
+    color: var(--up);
+  }
+  .ladder-stock-row {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
-  }
-  .board-stock-chip {
-    display: inline-flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 4px;
-    padding: 4px 8px 4px 10px;
-    border-radius: 8px;
-    font-size: 11px;
+    padding: 4px 10px;
+    font-size: 12px;
+    border-bottom: 1px dashed var(--rule);
     cursor: pointer;
-    transition: all 0.2s;
-    background: rgba(239,68,68,0.08);
-    border: 1px solid rgba(239,68,68,0.15);
+    transition: background 0.15s;
   }
-  .board-stock-chip:hover {
-    background: rgba(239,68,68,0.15);
-    transform: translateY(-1px);
+  .ladder-stock-row:last-child { border-bottom: none; }
+  .ladder-stock-row:hover { background: rgba(99,102,241,0.06); }
+  .ladder-stock-name { font-weight: 500; color: var(--ink); }
+  .ladder-stock-change { font-family: 'JetBrainsMono', monospace; font-weight: 600; }
+  .ladder-stock-change.up { color: var(--up); }
+  .ladder-stock-change.down { color: var(--down); }
+  .ladder-arrow {
+    flex: 0 0 28px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--up);
+    font-size: 14px;
+    font-weight: 700;
+    background: rgba(239,68,68,0.04);
   }
-  .board-stock-chip .code { color: var(--muted); font-family: 'JetBrainsMono', monospace; }
-  .board-stock-chip .name { font-weight: 600; color: var(--ink); }
-  .board-stock-chip .price { font-family: 'JetBrainsMono', monospace; color: var(--up); }
-  .board-stock-chip .sector-tag {
-    display: inline-block;
-    padding: 1px 6px;
-    border-radius: 4px;
-    font-size: 9px;
+  .ladder-extra-label {
+    font-size: 11px;
+    color: var(--muted);
     font-weight: 600;
-    line-height: 1.4;
-    background: rgba(99,102,241,0.1);
-    color: var(--accent);
-    margin-left: 2px;
+    writing-mode: vertical-rl;
+    letter-spacing: 2px;
   }
-  .board-stock-chip .sector-tag.agri { background: rgba(16,185,129,0.12); color: #059669; }
-  .board-stock-chip .sector-tag.media { background: rgba(139,92,246,0.12); color: #7c3aed; }
-  .board-stock-chip .sector-tag.tech { background: rgba(59,130,246,0.12); color: #2563eb; }
-  .board-stock-chip .sector-tag.consume { background: rgba(245,158,11,0.12); color: #d97706; }
-  .board-stock-chip .sector-tag.energy { background: rgba(239,68,68,0.12); color: #dc2626; }
-  .board-stock-chip .sector-tag.service { background: rgba(236,72,153,0.12); color: #db2777; }
-  .board-stock-chip .sector-tag.st { background: rgba(107,114,128,0.15); color: #4b5563; }
+  .ladder-stock-more {
+    text-align: center;
+    font-size: 11px;
+    color: var(--muted);
+    padding: 4px;
+    background: rgba(148,163,184,0.05);
+  }
 
   /* Sector Distribution */
   .sector-dist-wrap {
@@ -3149,152 +3155,67 @@
               <span class="panel-title-badge" style="background:rgba(239,68,68,0.1);color:var(--up)">7只连板</span>
             </div>
           </div>
-          <div class="board-ladder">
-            <div class="board-level">
-              <div class="board-level-num b5">5板</div>
-              <div class="board-level-content">
-                <div class="board-level-title">最高板 · 市场情绪标尺</div>
-                <div class="board-stocks">
-                  <div class="board-stock-chip" onclick="goToAnalysis('605577 龙版传媒')">
-                    <span class="code">605577</span>
-                    <span class="name">龙版传媒</span>
-                    <span class="price">15.55</span>
-                    <span class="sector-tag media">传媒</span>
-                  </div>
-                </div>
+          <div class="board-ladder" id="board-ladder">
+            <!-- 5板晋级 -->
+            <div class="ladder-row">
+              <div class="ladder-col ladder-yesterday">
+                <div class="ladder-tier-header">昨日5板(1)</div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">龙版传媒</span><span class="ladder-stock-change up">+9.97%</span></div>
+              </div>
+              <div class="ladder-arrow">➜</div>
+              <div class="ladder-col ladder-today">
+                <div class="ladder-tier-header today">今日6板(1)</div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">龙版传媒</span><span class="ladder-stock-change up">+9.97%</span></div>
+              </div>
+              <div class="ladder-col ladder-extra">
+                <span class="ladder-extra-label">晋级率 100%</span>
               </div>
             </div>
-            <div class="board-level">
-              <div class="board-level-num b2">2板</div>
-              <div class="board-level-content">
-                <div class="board-level-title">二板梯队 · 情绪接力</div>
-                <div class="board-stocks">
-                  <div class="board-stock-chip" onclick="goToAnalysis('002403 爱仕达')">
-                    <span class="code">002403</span><span class="name">爱仕达</span><span class="price">11.28</span><span class="sector-tag consume">家电</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600108 亚盛集团')">
-                    <span class="code">600108</span><span class="name">亚盛集团</span><span class="price">4.36</span><span class="sector-tag agri">农业</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600865 百大集团')">
-                    <span class="code">600865</span><span class="name">百大集团</span><span class="price">11.35</span><span class="sector-tag service">商业</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('603162 海通发展')">
-                    <span class="code">603162</span><span class="name">海通发展</span><span class="price">14.64</span><span class="sector-tag service">航运</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('605398 新炬网络')">
-                    <span class="code">605398</span><span class="name">新炬网络</span><span class="price">26.66</span><span class="sector-tag tech">软件</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('605580 恒盛能源')">
-                    <span class="code">605580</span><span class="name">恒盛能源</span><span class="price">22.47</span><span class="sector-tag energy">电力</span>
-                  </div>
-                </div>
+            <!-- 2板晋级 -->
+            <div class="ladder-row">
+              <div class="ladder-col ladder-yesterday">
+                <div class="ladder-tier-header">昨日2板(6)</div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">新炬网络</span><span class="ladder-stock-change up">+9.98%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">恒盛能源</span><span class="ladder-stock-change up">+9.99%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">爱仕达</span><span class="ladder-stock-change down">-2.35%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">亚盛集团</span><span class="ladder-stock-change down">-3.12%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">百大集团</span><span class="ladder-stock-change down">-1.85%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">海通发展</span><span class="ladder-stock-change down">-4.05%</span></div>
+              </div>
+              <div class="ladder-arrow">➜</div>
+              <div class="ladder-col ladder-today">
+                <div class="ladder-tier-header today">今日3板(2)</div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">新炬网络</span><span class="ladder-stock-change up">+9.98%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">恒盛能源</span><span class="ladder-stock-change up">+9.99%</span></div>
+              </div>
+              <div class="ladder-col ladder-extra">
+                <span class="ladder-extra-label">晋级率 33%</span>
               </div>
             </div>
-            <div class="board-level">
-              <div class="board-level-num b1">1板</div>
-              <div class="board-level-content">
-                <div class="board-level-title">首板梯队 · 34只新晋涨停</div>
-                <div class="board-stocks">
-                  <div class="board-stock-chip" onclick="goToAnalysis('000876 新希望')">
-                    <span class="code">000876</span><span class="name">新希望</span><span class="price">7.70</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('601949 中国出版')">
-                    <span class="code">601949</span><span class="name">中国出版</span><span class="price">5.83</span><span class="sector-tag media">出版</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('003040 楚天龙')">
-                    <span class="code">003040</span><span class="name">楚天龙</span><span class="price">21.12</span><span class="sector-tag tech">数字币</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002856 *ST美芝')">
-                    <span class="code">002856</span><span class="name">*ST美芝</span><span class="price">20.35</span><span class="sector-tag st">ST</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('603123 翠微股份')">
-                    <span class="code">603123</span><span class="name">翠微股份</span><span class="price">11.18</span><span class="sector-tag service">零售</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600975 新五丰')">
-                    <span class="code">600975</span><span class="name">新五丰</span><span class="price">5.59</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002124 天邦食品')">
-                    <span class="code">002124</span><span class="name">天邦食品</span><span class="price">2.42</span><span class="sector-tag agri">食品</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('601579 会稽山')">
-                    <span class="code">601579</span><span class="name">会稽山</span><span class="price">24.07</span><span class="sector-tag consume">黄酒</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600059 古越龙山')">
-                    <span class="code">600059</span><span class="name">古越龙山</span><span class="price">9.19</span><span class="sector-tag consume">黄酒</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002827 高争民爆')">
-                    <span class="code">002827</span><span class="name">高争民爆</span><span class="price">66.15</span><span class="sector-tag energy">民爆</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002702 海欣食品')">
-                    <span class="code">002702</span><span class="name">海欣食品</span><span class="price">7.92</span><span class="sector-tag agri">食品</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002330 得利斯')">
-                    <span class="code">002330</span><span class="name">得利斯</span><span class="price">4.35</span><span class="sector-tag agri">食品</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002321 华英农业')">
-                    <span class="code">002321</span><span class="name">华英农业</span><span class="price">3.28</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002458 益生股份')">
-                    <span class="code">002458</span><span class="name">益生股份</span><span class="price">9.86</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002234 民和股份')">
-                    <span class="code">002234</span><span class="name">民和股份</span><span class="price">16.82</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002311 圣农发展')">
-                    <span class="code">002311</span><span class="name">圣农发展</span><span class="price">18.56</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002714 牧原股份')">
-                    <span class="code">002714</span><span class="name">牧原股份</span><span class="price">39.85</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('300498 温氏股份')">
-                    <span class="code">300498</span><span class="name">温氏股份</span><span class="price">18.32</span><span class="sector-tag agri">养殖</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002726 龙大美食')">
-                    <span class="code">002726</span><span class="name">龙大美食</span><span class="price">8.45</span><span class="sector-tag agri">食品</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002567 唐人神')">
-                    <span class="code">002567</span><span class="name">唐人神</span><span class="price">5.68</span><span class="sector-tag agri">饲料</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('000702 正虹科技')">
-                    <span class="code">000702</span><span class="name">正虹科技</span><span class="price">4.12</span><span class="sector-tag agri">饲料</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('000719 中原传媒')">
-                    <span class="code">000719</span><span class="name">中原传媒</span><span class="price">5.67</span><span class="sector-tag media">传媒</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600633 浙数文化')">
-                    <span class="code">600633</span><span class="name">浙数文化</span><span class="price">12.45</span><span class="sector-tag media">传媒</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002446 盛路通信')">
-                    <span class="code">002446</span><span class="name">盛路通信</span><span class="price">7.83</span><span class="sector-tag tech">通信</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('300565 科信技术')">
-                    <span class="code">300565</span><span class="name">科信技术</span><span class="price">15.26</span><span class="sector-tag tech">通信</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('300738 奥飞数据')">
-                    <span class="code">300738</span><span class="name">奥飞数据</span><span class="price">13.58</span><span class="sector-tag tech">数据</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('002360 同德化工')">
-                    <span class="code">002360</span><span class="name">同德化工</span><span class="price">9.42</span><span class="sector-tag energy">化工</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600328 中盐化工')">
-                    <span class="code">600328</span><span class="name">中盐化工</span><span class="price">6.85</span><span class="sector-tag energy">化工</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('000796 凯撒旅业')">
-                    <span class="code">000796</span><span class="name">凯撒旅业</span><span class="price">3.92</span><span class="sector-tag service">旅游</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600054 黄山旅游')">
-                    <span class="code">600054</span><span class="name">黄山旅游</span><span class="price">10.28</span><span class="sector-tag service">旅游</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600801 华新水泥')">
-                    <span class="code">600801</span><span class="name">华新水泥</span><span class="price">14.56</span><span class="sector-tag energy">水泥</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('600223 鲁商发展')">
-                    <span class="code">600223</span><span class="name">鲁商发展</span><span class="price">4.68</span><span class="sector-tag consume">地产</span>
-                  </div>
-                  <div class="board-stock-chip" onclick="goToAnalysis('000965 天保基建')">
-                    <span class="code">000965</span><span class="name">天保基建</span><span class="price">3.25</span><span class="sector-tag consume">地产</span>
-                  </div>
-                </div>
+            <!-- 首板晋级 -->
+            <div class="ladder-row">
+              <div class="ladder-col ladder-yesterday">
+                <div class="ladder-tier-header">昨日首板(34)</div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">新希望</span><span class="ladder-stock-change up">+10.02%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">天邦食品</span><span class="ladder-stock-change up">+10.04%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">高争民爆</span><span class="ladder-stock-change up">+9.98%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">*ST美芝</span><span class="ladder-stock-change up">+5.02%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">中国出版</span><span class="ladder-stock-change up">+3.25%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">楚天龙</span><span class="ladder-stock-change up">+1.86%</span></div>
+                <div class="ladder-stock-more">+28只</div>
+              </div>
+              <div class="ladder-arrow">➜</div>
+              <div class="ladder-col ladder-today">
+                <div class="ladder-tier-header today">今日2板(6)</div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">新炬网络</span><span class="ladder-stock-change up">+9.98%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">恒盛能源</span><span class="ladder-stock-change up">+9.99%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">爱仕达</span><span class="ladder-stock-change up">+10.01%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">亚盛集团</span><span class="ladder-stock-change up">+10.03%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">百大集团</span><span class="ladder-stock-change up">+10.02%</span></div>
+                <div class="ladder-stock-row"><span class="ladder-stock-name">海通发展</span><span class="ladder-stock-change up">+9.97%</span></div>
+              </div>
+              <div class="ladder-col ladder-extra">
+                <span class="ladder-extra-label">晋级率 18%</span>
               </div>
             </div>
           </div>
