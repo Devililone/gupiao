@@ -1806,66 +1806,331 @@
   }
 
   /* =============== Daily Review Styles =============== */
-  /* 每日复盘+战法选股 左右两列布局 */
-  .daily-tactic-container {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 16px;
-    padding: 16px;
-    max-width: 1500px;
-    margin: 0 auto;
-    align-items: start;
-  }
   .daily-review-wrap {
-    padding: 0;
-    max-width: none;
-    margin: 0;
+    padding: 16px;
+    max-width: 1100px;
+    margin: 0 auto;
   }
 
-  /* 战法选股右侧面板 */
-  .tactic-panel {
+  /* ========== 战法选股独立页面 ========== */
+  .tactic-page-wrap {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+  }
+  .tactic-page-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    padding: 24px;
+    background: linear-gradient(135deg, rgba(99,102,241,0.1), rgba(139,92,246,0.05));
+    border: 1px solid rgba(99,102,241,0.2);
+    border-radius: 14px;
+  }
+  .tactic-page-title {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .tactic-page-icon { font-size: 42px; }
+  .tactic-page-title h2 {
+    margin: 0;
+    font-size: 22px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .tactic-page-title p {
+    margin: 4px 0 0 0;
+    font-size: 13px;
+    color: var(--muted);
+  }
+  .tactic-page-actions {
+    display: flex;
+    gap: 10px;
+  }
+  .tactic-page-btn {
+    padding: 9px 18px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    border: none;
+    transition: all 0.15s;
+  }
+  .tactic-page-btn.primary {
+    background: linear-gradient(135deg, var(--accent), #8b5cf6);
+    color: white;
+    box-shadow: 0 2px 8px rgba(99,102,241,0.3);
+  }
+  .tactic-page-btn.primary:hover { opacity: 0.9; transform: translateY(-1px); }
+  .tactic-page-btn.ghost {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+  }
+  .tactic-page-btn.ghost:hover { border-color: var(--accent); color: var(--accent); }
+  .tactic-page-btn.ghost:disabled { opacity: 0.4; cursor: not-allowed; }
+  .tactic-page-btn.small {
+    padding: 6px 12px;
+    font-size: 12px;
+    background: var(--bg);
+    border: 1px solid var(--rule);
+    color: var(--ink);
+  }
+  .tactic-page-btn.small:hover { border-color: var(--accent); color: var(--accent); }
+  .tactic-page-btn.small.danger:hover { border-color: var(--up); color: var(--up); }
+
+  .tactic-page-stats {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .tactic-stat-card {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 10px;
+    padding: 14px 18px;
+  }
+  .tactic-stat-label {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+  .tactic-stat-value {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    font-family: 'JetBrainsMono', monospace;
+  }
+  .tactic-stat-value.small { font-size: 14px; font-family: inherit; }
+
+  .tactic-page-body {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    gap: 16px;
+    min-height: 500px;
+  }
+
+  /* 左侧战法列表 */
+  .tactic-page-sidebar {
     background: var(--bg2);
     border: 1px solid var(--rule);
     border-radius: 12px;
     overflow: hidden;
-    position: sticky;
-    top: 16px;
+    display: flex;
+    flex-direction: column;
   }
-  .tactic-panel-header {
+  .tactic-page-sidebar-header {
     padding: 12px 14px;
     background: var(--bg3);
+    border-bottom: 1px solid var(--rule);
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tactic-sidebar-count {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .tactic-page-list {
+    flex: 1;
+    overflow-y: auto;
+    padding: 8px;
+  }
+  .tactic-page-item {
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    margin-bottom: 4px;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    border: 1px solid transparent;
+  }
+  .tactic-page-item:hover {
+    background: rgba(99,102,241,0.06);
+  }
+  .tactic-page-item.active {
+    background: linear-gradient(135deg, rgba(99,102,241,0.15), rgba(139,92,246,0.08));
+    border-color: rgba(99,102,241,0.3);
+  }
+  .tactic-page-item-icon { font-size: 22px; flex-shrink: 0; }
+  .tactic-page-item-info { flex: 1; min-width: 0; }
+  .tactic-page-item-name {
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--ink);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .tactic-page-item-meta {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 3px;
+    display: flex;
+    gap: 8px;
+  }
+  .tactic-page-item-meta strong {
+    color: var(--up);
+    font-weight: 700;
+  }
+
+  /* 右侧选股详情 */
+  .tactic-page-main {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  .tactic-page-main-header {
+    padding: 18px 20px;
     border-bottom: 1px solid var(--rule);
     display: flex;
     align-items: center;
     justify-content: space-between;
   }
-  .tactic-panel-title {
-    font-size: 14px;
+  .tactic-page-main-title {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+  }
+  .tactic-page-main-icon { font-size: 32px; }
+  .tactic-page-main-title h3 {
+    margin: 0;
+    font-size: 17px;
     font-weight: 700;
     color: var(--ink);
-    margin: 0;
   }
-  .tactic-panel-actions {
+  .tactic-page-main-title p {
+    margin: 3px 0 0 0;
+    font-size: 12px;
+    color: var(--muted);
+  }
+  .tactic-page-main-actions {
     display: flex;
-    gap: 6px;
+    gap: 8px;
   }
 
-  /* 战法模块：垂直布局（窄版） */
-  .tactic-module-v {
-    grid-template-columns: 160px 1fr;
-    min-height: 500px;
-    border-radius: 0;
-    border: none;
-    background: transparent;
+  .tactic-page-conditions {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    background: var(--bg3);
   }
-  .tactic-module-v .tactic-sidebar {
-    border-radius: 0;
-    border: none;
-    border-right: 1px solid var(--rule);
+
+  .tactic-page-result-header {
+    padding: 10px 20px;
+    font-size: 13px;
+    font-weight: 700;
+    color: var(--ink);
+    background: var(--bg3);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--rule);
   }
-  .tactic-module-v .tactic-main {
-    border-radius: 0;
-    border: none;
+  .tactic-page-result-count {
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+  .tactic-page-result-count strong {
+    color: var(--up);
+    font-weight: 700;
+    font-size: 15px;
+    margin: 0 3px;
+  }
+
+  .tactic-page-result-table {
+    flex: 1;
+    overflow-y: auto;
+  }
+  .tactic-page-result-table table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .tactic-page-result-table th {
+    padding: 10px 14px;
+    text-align: left;
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--muted);
+    background: var(--bg3);
+    border-bottom: 1px solid var(--rule);
+    position: sticky;
+    top: 0;
+  }
+  .tactic-page-result-table td {
+    padding: 9px 14px;
+    font-size: 12px;
+    color: var(--ink);
+    border-bottom: 1px solid var(--rule);
+  }
+  .tactic-page-result-table tbody tr:hover {
+    background: rgba(99,102,241,0.04);
+    cursor: pointer;
+  }
+  .tactic-page-result-table tbody tr:last-child td { border-bottom: none; }
+  .tactic-rank-cell {
+    width: 30px;
+    height: 22px;
+    border-radius: 4px;
+    background: var(--bg3);
+    color: var(--muted);
+    font-size: 11px;
+    font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .tactic-page-result-table tr:nth-child(1) .tactic-rank-cell { background: linear-gradient(135deg,#fbbf24,#f59e0b); color: white; }
+  .tactic-page-result-table tr:nth-child(2) .tactic-rank-cell { background: linear-gradient(135deg,#d1d5db,#9ca3af); color: white; }
+  .tactic-page-result-table tr:nth-child(3) .tactic-rank-cell { background: linear-gradient(135deg,#f97316,#ea580c); color: white; }
+  .tactic-stock-name-cell {
+    font-weight: 600;
+    color: var(--ink);
+  }
+  .tactic-stock-code {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: 'JetBrainsMono', monospace;
+  }
+  .tactic-sector-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(99,102,241,0.1);
+    color: var(--accent);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 500;
+  }
+  .tactic-num-cell {
+    font-family: 'JetBrainsMono', monospace;
+    font-weight: 600;
+    text-align: right;
+  }
+  .tactic-num-cell.up { color: var(--up); }
+  .tactic-num-cell.down { color: var(--down); }
+  .tactic-lianban-tag {
+    display: inline-block;
+    padding: 2px 6px;
+    background: rgba(239,68,68,0.1);
+    color: var(--up);
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 700;
   }
   .daily-header {
     background: var(--bg2);
@@ -3329,8 +3594,8 @@
   .resonance-dragon-pct { font-weight: 700; font-family: 'JetBrainsMono', monospace; font-size: 12px; }
 
   @media (max-width: 1100px) {
-    .daily-tactic-container { grid-template-columns: 1fr; }
-    .tactic-panel { position: static; }
+    .tactic-page-body { grid-template-columns: 220px 1fr; }
+    .tactic-page-stats { grid-template-columns: repeat(2, 1fr); }
   }
   @media (max-width: 768px) {
     .daily-grid-2 { grid-template-columns: 1fr; }
@@ -3366,6 +3631,7 @@
       <button class="tab-btn" data-tab="rotation">板块轮动</button>
       <button class="tab-btn" data-tab="dragon">龙头狙击</button>
       <button class="tab-btn" data-tab="daily">每日复盘</button>
+      <button class="tab-btn" data-tab="tactic">战法选股</button>
     </div>
     <div id="timeline-status" class="timeline-status" title="全局时间线一致性检查">
       <span class="tl-ok">✓ 时间线一致</span>
@@ -5096,9 +5362,7 @@
 
   <!-- Tab 5: Daily Review -->
   <div class="tab-content" id="tab-daily">
-    <div class="daily-tactic-container">
-      <!-- 左列：每日复盘 -->
-      <div class="daily-review-wrap">
+    <div class="daily-review-wrap">
       <div class="daily-header">
         <div class="daily-title">
           <span>📋</span> 每日复盘 · 交易计划与情绪监控
@@ -5423,46 +5687,104 @@
         </div>
       </div>
 
-        </div>
-      <!-- 右列：战法选股 -->
-      <div class="tactic-panel">
-        <div class="tactic-panel-header">
-          <h3 class="tactic-panel-title">🎯 战法选股</h3>
-          <div class="tactic-panel-actions">
-            <button class="tactic-undo-btn" id="tactic-undo-btn" onclick="undoTacticAction()" disabled title="撤回上一步操作">↶ 撤回</button>
-            <button class="tactic-add-btn" onclick="openTacticEditor()">+ 新建</button>
+    </div>
+  </div>
+
+  <!-- Tab 6: 战法选股 -->
+  <div class="tab-content" id="tab-tactic">
+    <div class="tactic-page-wrap">
+      <div class="tactic-page-header">
+        <div class="tactic-page-title">
+          <span class="tactic-page-icon">🎯</span>
+          <div>
+            <h2>战法选股</h2>
+            <p>自定义选股条件，智能筛选符合策略的股票</p>
           </div>
         </div>
-        <div class="tactic-module tactic-module-v">
-          <!-- 左侧：战法列表 -->
-          <div class="tactic-sidebar">
-            <div class="tactic-sidebar-header">战法列表</div>
-            <div class="tactic-list" id="tactic-list">
-              <!-- 动态渲染 -->
+        <div class="tactic-page-actions">
+          <button class="tactic-page-btn ghost" id="tactic-page-undo" onclick="undoTacticAction()" disabled>
+            ↶ 撤回操作
+          </button>
+          <button class="tactic-page-btn primary" onclick="openTacticEditor()">
+            + 新建战法
+          </button>
+        </div>
+      </div>
+
+      <div class="tactic-page-stats">
+        <div class="tactic-stat-card">
+          <div class="tactic-stat-label">战法总数</div>
+          <div class="tactic-stat-value" id="tactic-stat-total">--</div>
+        </div>
+        <div class="tactic-stat-card">
+          <div class="tactic-stat-label">今日选股池</div>
+          <div class="tactic-stat-value" id="tactic-stat-pool">--</div>
+        </div>
+        <div class="tactic-stat-card">
+          <div class="tactic-stat-label">最强战法</div>
+          <div class="tactic-stat-value" id="tactic-stat-top">--</div>
+        </div>
+        <div class="tactic-stat-card">
+          <div class="tactic-stat-label">数据更新</div>
+          <div class="tactic-stat-value small" id="tactic-stat-update">--</div>
+        </div>
+      </div>
+
+      <div class="tactic-page-body">
+        <!-- 左侧：战法列表 -->
+        <div class="tactic-page-sidebar">
+          <div class="tactic-page-sidebar-header">
+            <span>战法列表</span>
+            <span class="tactic-sidebar-count" id="tactic-sidebar-count">--</span>
+          </div>
+          <div class="tactic-page-list" id="tactic-page-list">
+            <!-- 动态渲染 -->
+          </div>
+        </div>
+        <!-- 右侧：选股详情 -->
+        <div class="tactic-page-main">
+          <div class="tactic-page-main-header" id="tactic-page-main-header">
+            <div class="tactic-page-main-title">
+              <span class="tactic-page-main-icon" id="tactic-page-main-icon">📊</span>
+              <div>
+                <h3 id="tactic-page-main-name">请选择战法</h3>
+                <p id="tactic-page-main-desc">从左侧选择一个战法查看选股条件与结果</p>
+              </div>
+            </div>
+            <div class="tactic-page-main-actions">
+              <button class="tactic-page-btn small" onclick="editCurrentTactic()">✏️ 编辑条件</button>
+              <button class="tactic-page-btn small danger" onclick="deleteCurrentTactic()">🗑️ 删除战法</button>
             </div>
           </div>
-          <!-- 右侧：选股结果 -->
-          <div class="tactic-main">
-            <div class="tactic-detail-header" id="tactic-detail-header">
-              <div class="tactic-detail-title">
-                <span class="tactic-detail-icon" id="tactic-detail-icon">📊</span>
-                <span id="tactic-detail-name">请选择战法</span>
-              </div>
-              <div class="tactic-detail-actions">
-                <button class="tactic-btn-small" onclick="editCurrentTactic()">✏️ 编辑</button>
-                <button class="tactic-btn-small danger" onclick="deleteCurrentTactic()">🗑️</button>
-              </div>
-            </div>
-            <div class="tactic-conditions" id="tactic-conditions">
-              <span style="color:var(--muted);font-size:12px;">从左侧选择战法查看条件与结果</span>
-            </div>
-            <div class="tactic-result-header">
-              <span>选股结果</span>
-              <span class="tactic-result-count" id="tactic-result-count">--</span>
-            </div>
-            <div class="tactic-result-list" id="tactic-result-list">
-              <div class="tactic-empty">请选择战法查看选股结果</div>
-            </div>
+
+          <div class="tactic-page-conditions" id="tactic-page-conditions">
+            <span style="color:var(--muted);font-size:13px;">选择战法后显示选股条件</span>
+          </div>
+
+          <div class="tactic-page-result-header">
+            <span>选股结果</span>
+            <span class="tactic-page-result-count" id="tactic-page-result-count">--</span>
+          </div>
+
+          <div class="tactic-page-result-table">
+            <table>
+              <thead>
+                <tr>
+                  <th style="width:50px;">排名</th>
+                  <th>股票名称</th>
+                  <th>代码</th>
+                  <th>所属板块</th>
+                  <th>股价</th>
+                  <th>今日涨幅</th>
+                  <th>连板</th>
+                  <th>5日涨幅</th>
+                  <th>20日涨幅</th>
+                </tr>
+              </thead>
+              <tbody id="tactic-page-result-body">
+                <tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px;">请选择战法查看选股结果</td></tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </div>

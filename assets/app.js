@@ -3280,7 +3280,7 @@
 
   // 更新撤回按钮状态
   function updateUndoButton() {
-    var btn = document.getElementById('tactic-undo-btn');
+    var btn = document.getElementById('tactic-page-undo');
     if (btn) {
       btn.disabled = undoStack.length === 0;
       if (undoStack.length > 0) {
@@ -3310,21 +3310,57 @@
 
   // 渲染战法列表
   function renderTacticList() {
-    var listEl = document.getElementById('tactic-list');
+    var listEl = document.getElementById('tactic-page-list');
     if (!listEl) return;
+
+    var countEl = document.getElementById('tactic-sidebar-count');
+    if (countEl) countEl.textContent = tactics.length + '个';
 
     listEl.innerHTML = tactics.map(function(t) {
       var result = runTacticScreen(t);
       var count = result.length;
       var activeCls = t.id === currentTacticId ? 'active' : '';
-      return '<div class="tactic-item ' + activeCls + '" onclick="selectTactic(\'' + t.id + '\')">' +
-        '<span class="tactic-item-icon">' + t.icon + '</span>' +
-        '<div class="tactic-item-info">' +
-          '<div class="tactic-item-name">' + t.name + '</div>' +
-          '<div class="tactic-item-count">命中 <strong>' + count + '</strong> 只</div>' +
+      return '<div class="tactic-page-item ' + activeCls + '" onclick="selectTactic(\'' + t.id + '\')">' +
+        '<span class="tactic-page-item-icon">' + t.icon + '</span>' +
+        '<div class="tactic-page-item-info">' +
+          '<div class="tactic-page-item-name">' + t.name + '</div>' +
+          '<div class="tactic-page-item-meta">' +
+            '<span>' + t.conditions.length + '个条件</span>' +
+            '<span>命中 <strong>' + count + '</strong></span>' +
+          '</div>' +
         '</div>' +
         '</div>';
     }).join('');
+
+    // 更新统计卡片
+    updateTacticStats();
+  }
+
+  // 更新战法统计
+  function updateTacticStats() {
+    var totalEl = document.getElementById('tactic-stat-total');
+    var poolEl = document.getElementById('tactic-stat-pool');
+    var topEl = document.getElementById('tactic-stat-top');
+    var updateEl = document.getElementById('tactic-stat-update');
+
+    if (totalEl) totalEl.textContent = tactics.length;
+    if (poolEl) poolEl.textContent = stocks ? stocks.length : '--';
+
+    // 找命中最多的战法
+    var topTactic = null;
+    var maxCount = 0;
+    tactics.forEach(function(t) {
+      var c = runTacticScreen(t).length;
+      if (c > maxCount) { maxCount = c; topTactic = t; }
+    });
+    if (topEl) topEl.textContent = topTactic ? topTactic.name : '--';
+
+    var lastUpdate = MarketDB.getModule(realMarketData.date, 'tactics');
+    if (updateEl) {
+      updateEl.textContent = lastUpdate && lastUpdate._updatedAt
+        ? new Date(lastUpdate._updatedAt).toLocaleTimeString()
+        : '--';
+    }
   }
 
   // 选择战法
@@ -3337,25 +3373,28 @@
   // 渲染战法详情
   function renderTacticDetail() {
     var tactic = tactics.find(function(t) { return t.id === currentTacticId; });
-    var headerEl = document.getElementById('tactic-detail-header');
-    var condEl = document.getElementById('tactic-conditions');
-    var resultEl = document.getElementById('tactic-result-list');
-    var countEl = document.getElementById('tactic-result-count');
-    var nameEl = document.getElementById('tactic-detail-name');
-    var iconEl = document.getElementById('tactic-detail-icon');
+    var nameEl = document.getElementById('tactic-page-main-name');
+    var iconEl = document.getElementById('tactic-page-main-icon');
+    var descEl = document.getElementById('tactic-page-main-desc');
+    var condEl = document.getElementById('tactic-page-conditions');
+    var resultBody = document.getElementById('tactic-page-result-body');
+    var countEl = document.getElementById('tactic-page-result-count');
 
     if (!tactic) {
-      if (headerEl) headerEl.style.display = 'flex';
       if (nameEl) nameEl.textContent = '请选择战法';
       if (iconEl) iconEl.textContent = '📊';
-      if (condEl) condEl.innerHTML = '<span style="color:var(--muted);font-size:12px;">从左侧选择一个战法查看选股条件与结果</span>';
+      if (descEl) descEl.textContent = '从左侧选择一个战法查看选股条件与结果';
+      if (condEl) condEl.innerHTML = '<span style="color:var(--muted);font-size:13px;">选择战法后显示选股条件</span>';
       if (countEl) countEl.textContent = '--';
-      if (resultEl) resultEl.innerHTML = '<div class="tactic-empty">请选择战法查看选股结果</div>';
+      if (resultBody) {
+        resultBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px;">请选择战法查看选股结果</td></tr>';
+      }
       return;
     }
 
     if (nameEl) nameEl.textContent = tactic.name;
     if (iconEl) iconEl.textContent = tactic.icon;
+    if (descEl) descEl.textContent = tactic.desc || '自定义选股策略';
 
     // 条件标签
     if (condEl) {
@@ -3377,33 +3416,39 @@
       }).join('');
     }
 
-    // 选股结果
+    // 选股结果表格
     var result = runTacticScreen(tactic);
     if (countEl) {
       countEl.innerHTML = '共 <strong>' + result.length + '</strong> 只股票符合条件';
     }
-    if (resultEl) {
+    if (resultBody) {
       if (result.length === 0) {
-        resultEl.innerHTML = '<div class="tactic-empty">暂无符合条件的股票</div>';
+        resultBody.innerHTML = '<tr><td colspan="9" style="text-align:center;color:var(--muted);padding:40px;">暂无符合条件的股票</td></tr>';
       } else {
-        resultEl.innerHTML = result.slice(0, 50).map(function(s, idx) {
+        resultBody.innerHTML = result.slice(0, 100).map(function(s, idx) {
           var chgCls = s.today >= 0 ? 'up' : 'down';
           var chgSign = s.today >= 0 ? '+' : '';
+          var d5Cls = s.d5 >= 0 ? 'up' : 'down';
+          var d5Sign = s.d5 >= 0 ? '+' : '';
+          var d20Cls = s.d20 >= 0 ? 'up' : 'down';
+          var d20Sign = s.d20 >= 0 ? '+' : '';
           var lianbanTag = s.lianban > 1
-            ? '<span style="color:var(--up);">· ' + s.lianban + '连板</span>'
-            : (s.lianban === 1 ? '<span style="color:var(--up);">· 首板</span>' : '');
-          return '<div class="tactic-stock-row" onclick="goToAnalysis(\'' + s.code + ' ' + s.name + '\')">' +
-            '<div class="tactic-stock-rank">' + (idx + 1) + '</div>' +
-            '<div class="tactic-stock-info">' +
-              '<div class="tactic-stock-name">' + s.name + '</div>' +
-              '<div class="tactic-stock-meta">' +
-                '<span class="tactic-stock-sector">' + s.sector + '</span>' +
-                '<span>' + s.price.toFixed(2) + '元</span>' +
-                lianbanTag +
-              '</div>' +
-            '</div>' +
-            '<div class="tactic-stock-change ' + chgCls + '">' + chgSign + s.today.toFixed(2) + '%</div>' +
-            '</div>';
+            ? '<span class="tactic-lianban-tag">' + s.lianban + '连板</span>'
+            : (s.lianban === 1 ? '<span class="tactic-lianban-tag">首板</span>' : '<span style="color:var(--muted);font-size:10px;">--</span>');
+
+          return '<tr onclick="goToAnalysis(\'' + s.code + ' ' + s.name + '\')">' +
+            '<td><span class="tactic-rank-cell">' + (idx + 1) + '</span></td>' +
+            '<td>' +
+              '<div class="tactic-stock-name-cell">' + s.name + '</div>' +
+            '</td>' +
+            '<td><span class="tactic-stock-code">' + s.code + '</span></td>' +
+            '<td><span class="tactic-sector-tag">' + s.sector + '</span></td>' +
+            '<td class="tactic-num-cell">' + s.price.toFixed(2) + '</td>' +
+            '<td class="tactic-num-cell ' + chgCls + '">' + chgSign + s.today.toFixed(2) + '%</td>' +
+            '<td>' + lianbanTag + '</td>' +
+            '<td class="tactic-num-cell ' + d5Cls + '">' + d5Sign + s.d5.toFixed(2) + '%</td>' +
+            '<td class="tactic-num-cell ' + d20Cls + '">' + d20Sign + s.d20.toFixed(2) + '%</td>' +
+            '</tr>';
         }).join('');
       }
     }
