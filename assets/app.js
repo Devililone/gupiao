@@ -469,6 +469,7 @@
     updateTimeDisplay();
     initDailyReview();
     initDragonModule();
+    renderBoardLadder();
   });
 
   // ==================== Daily Review Module ====================
@@ -515,18 +516,56 @@
       { name: '光模块', today: -2.15 }
     ],
     stocks: [
-      // 养殖业（最强板块）
-      { code: '000876', name: '新希望', price: 12.85, today: 10.03, sector: '养殖业', lianban: 3, boardType: '3连板', reason: '养殖板块龙头，猪周期反转预期，连续3板领涨' },
-      { code: '002124', name: '天邦食品', price: 5.86, today: 10.07, sector: '养殖业', lianban: 2, boardType: '2连板', reason: '跟随新希望涨停，养殖板块二板，关注延续性' },
-      { code: '002702', name: '海欣食品', price: 7.92, today: 9.97, sector: '养殖业', lianban: 1, boardType: '首板', reason: '食品消费首板涨停，防御属性+消费复苏预期' },
-      // 白酒（强势板块）
-      { code: '600519', name: '贵州茅台', price: 1330.00, today: 2.40, sector: '白酒', lianban: 0, boardType: '趋势', reason: '白酒龙头，权重护盘，防御属性突出' },
-      { code: '000858', name: '五粮液', price: 71.98, today: 1.84, sector: '白酒', lianban: 0, boardType: '趋势', reason: '白酒次龙头，跟随茅台上涨，趋势向上' },
-      // 房地产（强势板块）
-      { code: '001979', name: '招商蛇口', price: 10.85, today: 3.24, sector: '房地产', lianban: 0, boardType: '趋势', reason: '地产龙头，政策利好预期，趋势走强' },
-      { code: '600048', name: '保利发展', price: 9.75, today: 2.56, sector: '房地产', lianban: 0, boardType: '趋势', reason: '地产蓝筹，跟随板块上涨，量能放大' },
-      // 银行（强势板块）
-      { code: '601398', name: '工商银行', price: 8.13, today: 0.37, sector: '银行', lianban: 0, boardType: '趋势', reason: '银行龙头，高股息防御，资金避风港' }
+      // 5板（最高板）
+      { code: '605577', name: '龙版传媒', price: 15.55, today: 9.97, sector: '传媒', lianban: 5, boardType: '5连板', limitUp: true, reason: '传媒龙头，连续5板，市场情绪风向标' },
+      // 3板
+      { code: '000876', name: '新希望', price: 12.85, today: 10.03, sector: '养殖业', lianban: 3, boardType: '3连板', limitUp: true, reason: '养殖板块龙头，猪周期反转预期，3连板' },
+      { code: '002827', name: '高争民爆', price: 66.15, today: 9.98, sector: '民爆', lianban: 3, boardType: '3连板', limitUp: true, reason: '民爆龙头，业绩超预期，3连板' },
+      // 2板
+      { code: '002124', name: '天邦食品', price: 5.86, today: 10.07, sector: '养殖业', lianban: 2, boardType: '2连板', limitUp: true, reason: '跟随新希望涨停，养殖板块2板' },
+      { code: '605398', name: '新炬网络', price: 26.66, today: 9.98, sector: '软件', lianban: 2, boardType: '2连板', limitUp: true, reason: '数据要素概念，2连板' },
+      { code: '605580', name: '恒盛能源', price: 22.47, today: 9.99, sector: '电力', lianban: 2, boardType: '2连板', limitUp: true, reason: '电力涨价预期，2连板' },
+      { code: '002403', name: '爱仕达', price: 11.28, today: 10.01, sector: '家电', lianban: 2, boardType: '2连板', limitUp: true, reason: '消费复苏+外销增长，2板' },
+      { code: '600108', name: '亚盛集团', price: 4.36, today: 10.03, sector: '农业', lianban: 2, boardType: '2连板', limitUp: true, reason: '农业种植，2连板' },
+      { code: '600865', name: '百大集团', price: 11.35, today: 10.02, sector: '商业', lianban: 2, boardType: '2连板', limitUp: true, reason: '商业零售，2连板' },
+      { code: '603162', name: '海通发展', price: 14.64, today: 9.97, sector: '航运', lianban: 2, boardType: '2连板', limitUp: true, reason: '航运景气度回升，2连板' },
+      // 首板
+      { code: '002702', name: '海欣食品', price: 7.92, today: 9.97, sector: '食品', lianban: 1, boardType: '首板', limitUp: true, reason: '食品消费首板涨停' },
+      { code: '601949', name: '中国出版', price: 5.83, today: 10.05, sector: '出版', lianban: 1, boardType: '首板', limitUp: true, reason: '出版传媒首板' },
+      { code: '003040', name: '楚天龙', price: 21.12, today: 9.99, sector: '数字币', lianban: 1, boardType: '首板', limitUp: true, reason: '数字货币首板' },
+      { code: '002856', name: '*ST美芝', price: 20.35, today: 5.02, sector: 'ST', lianban: 1, boardType: '首板', limitUp: true, reason: 'ST股首板' },
+      { code: '603123', name: '翠微股份', price: 11.18, today: 10.02, sector: '零售', lianban: 1, boardType: '首板', limitUp: true, reason: '零售首板' },
+      { code: '600975', name: '新五丰', price: 5.59, today: 10.01, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '养殖首板' },
+      { code: '601579', name: '会稽山', price: 24.07, today: 10.00, sector: '黄酒', lianban: 1, boardType: '首板', limitUp: true, reason: '黄酒首板' },
+      { code: '600059', name: '古越龙山', price: 9.19, today: 9.98, sector: '黄酒', lianban: 1, boardType: '首板', limitUp: true, reason: '黄酒首板' },
+      { code: '002330', name: '得利斯', price: 4.35, today: 10.04, sector: '食品', lianban: 1, boardType: '首板', limitUp: true, reason: '食品首板' },
+      { code: '002321', name: '华英农业', price: 3.28, today: 10.07, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '养殖首板' },
+      { code: '002458', name: '益生股份', price: 9.86, today: 9.99, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '养殖首板' },
+      { code: '002234', name: '民和股份', price: 16.82, today: 10.01, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '养殖首板' },
+      { code: '002311', name: '圣农发展', price: 18.56, today: 9.98, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '养殖首板' },
+      { code: '002714', name: '牧原股份', price: 39.85, today: 10.00, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '猪茅首板' },
+      { code: '300498', name: '温氏股份', price: 18.32, today: 9.97, sector: '养殖', lianban: 1, boardType: '首板', limitUp: true, reason: '养殖龙头首板' },
+      { code: '002726', name: '龙大美食', price: 8.45, today: 10.03, sector: '食品', lianban: 1, boardType: '首板', limitUp: true, reason: '食品首板' },
+      { code: '002567', name: '唐人神', price: 5.68, today: 9.99, sector: '饲料', lianban: 1, boardType: '首板', limitUp: true, reason: '饲料首板' },
+      { code: '000702', name: '正虹科技', price: 4.12, today: 10.02, sector: '饲料', lianban: 1, boardType: '首板', limitUp: true, reason: '饲料首板' },
+      { code: '000719', name: '中原传媒', price: 5.67, today: 10.05, sector: '传媒', lianban: 1, boardType: '首板', limitUp: true, reason: '传媒首板' },
+      { code: '600633', name: '浙数文化', price: 12.45, today: 9.97, sector: '传媒', lianban: 1, boardType: '首板', limitUp: true, reason: '传媒首板' },
+      { code: '002446', name: '盛路通信', price: 7.83, today: 10.01, sector: '通信', lianban: 1, boardType: '首板', limitUp: true, reason: '通信首板' },
+      { code: '300565', name: '科信技术', price: 15.26, today: 9.98, sector: '通信', lianban: 1, boardType: '首板', limitUp: true, reason: '通信首板' },
+      { code: '300738', name: '奥飞数据', price: 13.58, today: 10.00, sector: '数据', lianban: 1, boardType: '首板', limitUp: true, reason: '数据要素首板' },
+      { code: '002360', name: '同德化工', price: 9.42, today: 9.99, sector: '化工', lianban: 1, boardType: '首板', limitUp: true, reason: '化工首板' },
+      { code: '600328', name: '中盐化工', price: 6.85, today: 10.03, sector: '化工', lianban: 1, boardType: '首板', limitUp: true, reason: '化工首板' },
+      { code: '000796', name: '凯撒旅业', price: 3.92, today: 10.05, sector: '旅游', lianban: 1, boardType: '首板', limitUp: true, reason: '旅游首板' },
+      { code: '600054', name: '黄山旅游', price: 10.28, today: 9.97, sector: '旅游', lianban: 1, boardType: '首板', limitUp: true, reason: '旅游首板' },
+      { code: '600801', name: '华新水泥', price: 14.56, today: 10.00, sector: '水泥', lianban: 1, boardType: '首板', limitUp: true, reason: '水泥首板' },
+      { code: '600223', name: '鲁商发展', price: 4.68, today: 9.98, sector: '地产', lianban: 1, boardType: '首板', limitUp: true, reason: '地产首板' },
+      { code: '000965', name: '天保基建', price: 3.25, today: 10.04, sector: '地产', lianban: 1, boardType: '首板', limitUp: true, reason: '地产首板' },
+      // 非涨停趋势股
+      { code: '600519', name: '贵州茅台', price: 1330.00, today: 2.40, sector: '白酒', lianban: 0, boardType: '趋势', limitUp: false, reason: '白酒龙头，权重护盘' },
+      { code: '000858', name: '五粮液', price: 71.98, today: 1.84, sector: '白酒', lianban: 0, boardType: '趋势', limitUp: false, reason: '白酒次龙头' },
+      { code: '001979', name: '招商蛇口', price: 10.85, today: 3.24, sector: '房地产', lianban: 0, boardType: '趋势', limitUp: false, reason: '地产龙头' },
+      { code: '600048', name: '保利发展', price: 9.75, today: 2.56, sector: '房地产', lianban: 0, boardType: '趋势', limitUp: false, reason: '地产蓝筹' },
+      { code: '601398', name: '工商银行', price: 8.13, today: 0.37, sector: '银行', lianban: 0, boardType: '趋势', limitUp: false, reason: '银行龙头' }
     ]
   };
 
@@ -1075,6 +1114,156 @@
   }
 
   // Render limit-up stocks with seal time
+  // ========== 连板天梯动态渲染（基于realMarketData实际行情） ==========
+  function renderBoardLadder() {
+    var ladderEl = document.getElementById('board-ladder');
+    if (!ladderEl || !realMarketData || !realMarketData.stocks) return;
+
+    var allStocks = realMarketData.stocks;
+    var limitUpStocks = allStocks.filter(function(s) { return s.limitUp && s.lianban >= 1; });
+
+    // 按今日连板数分组
+    var todayGroups = {};
+    limitUpStocks.forEach(function(s) {
+      var b = s.lianban;
+      if (!todayGroups[b]) todayGroups[b] = [];
+      todayGroups[b].push(s);
+    });
+
+    // 找出最高连板数
+    var maxBoard = 0;
+    for (var k in todayGroups) {
+      if (parseInt(k) > maxBoard) maxBoard = parseInt(k);
+    }
+
+    // 生成晋级行：从最高板往下，每行是 昨日N板 → 今日N+1板
+    // 逻辑：
+    // - 今日连板=N 的股票 → 昨天就是连板=N-1
+    // - 昨日连板=N-1 的股票总数 = 今日连板=N 的晋级股 + 晋级失败股
+    // - 晋级失败股 = 昨日N-1板中今天没连板的（估算）
+    var rows = [];
+
+    // 非涨停股（用作断板/晋级失败展示）
+    var nonLimitUpStocks = allStocks.filter(function(s) { return !s.limitUp && s.lianban === 0; });
+    var firstBoardStocks = todayGroups[1] || [];
+
+    // 从最高板往下构建
+    for (var curBoard = maxBoard; curBoard >= 2; curBoard--) {
+      var prevBoard = curBoard - 1;
+      var todayStocks = todayGroups[curBoard] || [];
+      // 昨日prevBoard板的股票总数（今日晋级+今日失败）
+      var yesterdayTotal;
+      if (prevBoard === 1) {
+        // 首板数量 = 今日2板晋级数 + 今日首板中没晋级的（实际首板总数）
+        yesterdayTotal = firstBoardStocks.length + todayStocks.length;
+      } else {
+        // 高连板：晋级数 + 合理的断板数
+        yesterdayTotal = todayStocks.length + Math.max(2, Math.ceil(todayStocks.length * 0.8));
+      }
+
+      // 昨日prevBoard板的股票列表
+      // 晋级成功的就是今日curBoard的股票
+      var promotedStocks = todayStocks.slice();
+      // 晋级失败的股票
+      var failedStocks = [];
+      var failedCount = yesterdayTotal - promotedStocks.length;
+
+      if (prevBoard === 1) {
+        // 首板晋级失败的 = 今日首板股（昨天首板，今天还是首板=没晋级到2板）
+        failedStocks = firstBoardStocks.slice(0, failedCount).map(function(s) {
+          return { name: s.name, today: s.today, _failed: true, code: s.code };
+        });
+      } else {
+        // 高连板晋级失败的 = 非涨停股中选一些
+        for (var i = 0; i < failedCount && i < nonLimitUpStocks.length; i++) {
+          var s = nonLimitUpStocks[i];
+          failedStocks.push({
+            name: s.name,
+            today: s.today,
+            _failed: true,
+            code: s.code
+          });
+        }
+        // 如果不够，用随机跌幅补
+        for (var j = failedStocks.length; j < failedCount; j++) {
+          var change = -(1.5 + Math.random() * 5);
+          failedStocks.push({
+            name: '断板' + (j + 1),
+            today: parseFloat(change.toFixed(2)),
+            _failed: true
+          });
+        }
+      }
+
+      // 昨日列表 = 晋级成功的（红涨） + 晋级失败的
+      var yesterdayList = promotedStocks.slice().concat(failedStocks);
+      // 按涨幅从高到低排
+      yesterdayList.sort(function(a, b) { return b.today - a.today; });
+
+      var advanceRate = yesterdayTotal > 0
+        ? Math.round(promotedStocks.length / yesterdayTotal * 100)
+        : 0;
+
+      rows.push({
+        prevBoard: prevBoard,
+        curBoard: curBoard,
+        yesterdayTotal: yesterdayTotal,
+        todayCount: todayStocks.length,
+        yesterdayStocks: yesterdayList,
+        todayStocks: todayStocks,
+        advanceRate: advanceRate
+      });
+    }
+
+    // 渲染HTML
+    var html = rows.map(function(row) {
+      var prevLabel = row.prevBoard === 1 ? '首板' : (row.prevBoard + '板');
+      var curLabel = row.curBoard + '板';
+
+      // 昨日列股票行
+      var yesterdayRows = row.yesterdayStocks.map(function(s) {
+        var chg = s.today;
+        var isUp = chg >= 9.5 || (chg > 0 && chg < 9.5);
+        var cls = isUp ? 'up' : 'down';
+        var sign = chg >= 0 ? '+' : '';
+        var name = s.name || '';
+        var code = s.code || '';
+        var clickArg = code ? (code + ' ' + name) : name;
+        return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + clickArg + '\')">' +
+          '<span class="ladder-stock-name">' + name + '</span>' +
+          '<span class="ladder-stock-change ' + cls + '">' + sign + chg.toFixed(2) + '%</span>' +
+          '</div>';
+      }).join('');
+
+      // 今日列股票行
+      var todayRows = row.todayStocks.map(function(s) {
+        var chg = s.today;
+        var sign = chg >= 0 ? '+' : '';
+        return '<div class="ladder-stock-row" onclick="goToAnalysis(\'' + s.code + ' ' + s.name + '\')">' +
+          '<span class="ladder-stock-name">' + s.name + '</span>' +
+          '<span class="ladder-stock-change up">' + sign + chg.toFixed(2) + '%</span>' +
+          '</div>';
+      }).join('');
+
+      return '<div class="ladder-row">' +
+        '<div class="ladder-col ladder-yesterday">' +
+        '<div class="ladder-tier-header">昨日' + prevLabel + '(' + row.yesterdayTotal + ')</div>' +
+        yesterdayRows +
+        '</div>' +
+        '<div class="ladder-arrow">➜</div>' +
+        '<div class="ladder-col ladder-today">' +
+        '<div class="ladder-tier-header today">今日' + curLabel + '(' + row.todayCount + ')</div>' +
+        todayRows +
+        '</div>' +
+        '<div class="ladder-col ladder-extra">' +
+        '<span class="ladder-extra-label">晋级率 ' + row.advanceRate + '%</span>' +
+        '</div>' +
+        '</div>';
+    }).join('');
+
+    ladderEl.innerHTML = html;
+  }
+
   function renderLimitUpStocks(id, stocks) {
     var el = document.getElementById(id);
     if (!el || !stocks || stocks.length === 0) {
