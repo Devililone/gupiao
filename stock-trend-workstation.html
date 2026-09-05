@@ -1806,10 +1806,66 @@
   }
 
   /* =============== Daily Review Styles =============== */
-  .daily-review-wrap {
+  /* 每日复盘+战法选股 左右两列布局 */
+  .daily-tactic-container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 16px;
     padding: 16px;
-    max-width: 1100px;
+    max-width: 1500px;
     margin: 0 auto;
+    align-items: start;
+  }
+  .daily-review-wrap {
+    padding: 0;
+    max-width: none;
+    margin: 0;
+  }
+
+  /* 战法选股右侧面板 */
+  .tactic-panel {
+    background: var(--bg2);
+    border: 1px solid var(--rule);
+    border-radius: 12px;
+    overflow: hidden;
+    position: sticky;
+    top: 16px;
+  }
+  .tactic-panel-header {
+    padding: 12px 14px;
+    background: var(--bg3);
+    border-bottom: 1px solid var(--rule);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .tactic-panel-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    margin: 0;
+  }
+  .tactic-panel-actions {
+    display: flex;
+    gap: 6px;
+  }
+
+  /* 战法模块：垂直布局（窄版） */
+  .tactic-module-v {
+    grid-template-columns: 160px 1fr;
+    min-height: 500px;
+    border-radius: 0;
+    border: none;
+    background: transparent;
+  }
+  .tactic-module-v .tactic-sidebar {
+    border-radius: 0;
+    border: none;
+    border-right: 1px solid var(--rule);
+  }
+  .tactic-module-v .tactic-main {
+    border-radius: 0;
+    border: none;
   }
   .daily-header {
     background: var(--bg2);
@@ -3272,6 +3328,10 @@
   .resonance-dragon-name { color: var(--ink); font-weight: 600; flex: 1; }
   .resonance-dragon-pct { font-weight: 700; font-family: 'JetBrainsMono', monospace; font-size: 12px; }
 
+  @media (max-width: 1100px) {
+    .daily-tactic-container { grid-template-columns: 1fr; }
+    .tactic-panel { position: static; }
+  }
   @media (max-width: 768px) {
     .daily-grid-2 { grid-template-columns: 1fr; }
     .daily-meta-bar { grid-template-columns: 1fr; }
@@ -5036,7 +5096,9 @@
 
   <!-- Tab 5: Daily Review -->
   <div class="tab-content" id="tab-daily">
-    <div class="daily-review-wrap">
+    <div class="daily-tactic-container">
+      <!-- 左列：每日复盘 -->
+      <div class="daily-review-wrap">
       <div class="daily-header">
         <div class="daily-title">
           <span>📋</span> 每日复盘 · 交易计划与情绪监控
@@ -5361,16 +5423,17 @@
         </div>
       </div>
 
-      <!-- Section 6: 战法选股 -->
-      <div class="daily-section">
-        <h3 class="daily-section-title">
-          🎯 战法选股
-          <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--muted);display:flex;align-items:center;gap:8px;">
+        </div>
+      <!-- 右列：战法选股 -->
+      <div class="tactic-panel">
+        <div class="tactic-panel-header">
+          <h3 class="tactic-panel-title">🎯 战法选股</h3>
+          <div class="tactic-panel-actions">
             <button class="tactic-undo-btn" id="tactic-undo-btn" onclick="undoTacticAction()" disabled title="撤回上一步操作">↶ 撤回</button>
-            <button class="tactic-add-btn" onclick="openTacticEditor()">+ 新建战法</button>
-          </span>
-        </h3>
-        <div class="tactic-module">
+            <button class="tactic-add-btn" onclick="openTacticEditor()">+ 新建</button>
+          </div>
+        </div>
+        <div class="tactic-module tactic-module-v">
           <!-- 左侧：战法列表 -->
           <div class="tactic-sidebar">
             <div class="tactic-sidebar-header">战法列表</div>
@@ -5386,12 +5449,12 @@
                 <span id="tactic-detail-name">请选择战法</span>
               </div>
               <div class="tactic-detail-actions">
-                <button class="tactic-btn-small" onclick="editCurrentTactic()">✏️ 编辑条件</button>
-                <button class="tactic-btn-small danger" onclick="deleteCurrentTactic()">🗑️ 删除</button>
+                <button class="tactic-btn-small" onclick="editCurrentTactic()">✏️ 编辑</button>
+                <button class="tactic-btn-small danger" onclick="deleteCurrentTactic()">🗑️</button>
               </div>
             </div>
             <div class="tactic-conditions" id="tactic-conditions">
-              <span style="color:var(--muted);font-size:12px;">从左侧选择一个战法查看选股条件与结果</span>
+              <span style="color:var(--muted);font-size:12px;">从左侧选择战法查看条件与结果</span>
             </div>
             <div class="tactic-result-header">
               <span>选股结果</span>
@@ -5403,7 +5466,6 @@
           </div>
         </div>
       </div>
-
     </div>
   </div>
 
