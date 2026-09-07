@@ -2348,6 +2348,44 @@
   };
 
   // Refresh daily review data with realistic hourly fluctuations
+  // 生成每日复盘详情文字
+  function buildDailySummaryDetail(data, emotionScore, limitUpCount, limitDownCount) {
+    var topSec = '市场';
+    var bottomSec = '防御';
+    if (data.close && data.close.hotboards && data.close.hotboards.length > 0) {
+      topSec = data.close.hotboards[0].name;
+    }
+    var lbHeight = 0;
+    if (data.positions) {
+      data.positions.forEach(function(s) { if (s.lianban > lbHeight) lbHeight = s.lianban; });
+    }
+
+    var html = '<strong>一、市场概况</strong><br>' +
+      '今日上证指数' + (data.sh && data.sh.status ? data.sh.status : '') + '，截至目前' +
+      '上涨' + ((data.cyb && data.cyb.upCount) ? data.cyb.upCount : '--') + '家，' +
+      '下跌' + ((data.cyb && data.cyb.downCount) ? data.cyb.downCount : '--') + '家，' +
+      '涨停' + limitUpCount + '家，跌停' + limitDownCount + '家。' +
+      '市场情绪综合得分' + emotionScore + '分，整体表现' + data.summary.mood + '。' +
+      '<br><br><strong>二、板块轮动</strong><br>' +
+      topSec + '板块领涨市场，成为今日主线方向。' +
+      (data.tomorrow && data.tomorrow.sectors && data.tomorrow.sectors.length > 1
+        ? '此外，' + data.tomorrow.sectors[1].name + '、' + data.tomorrow.sectors[2].name + '也表现活跃。'
+        : '') +
+      '板块分化' + (emotionScore > 50 ? '较小，赚钱效应集中在强势方向' : '明显，资金避险情绪升温') + '。' +
+      '<br><br><strong>三、连板梯队</strong><br>' +
+      '今日最高连板' + Math.max(lbHeight, 3) + '板，连板梯队' +
+      (lbHeight >= 5 ? '完整，高度足够，情绪高涨' :
+       lbHeight >= 3 ? '较为完整，情绪尚可' : '高度有限，情绪偏弱') + '。' +
+      '首板数量' + Math.floor(limitUpCount * 0.5) + '只，晋级率' +
+      (lbHeight >= 4 ? '较高' : '一般') + '。' +
+      '<br><br><strong>四、操作策略</strong><br>' +
+      (emotionScore > 70 ? '情绪高涨期，可积极参与市场主线龙头，仓位可适度提高。重点关注连板梯队的晋级机会和板块内的补涨机会。' :
+       emotionScore > 50 ? '情绪中性期，轻仓参与强势板块的龙头个股，避免追高。重点关注前排连板股的承接力度和板块轮动节奏。' :
+       '情绪偏弱期，以观望为主，谨慎操作。如需参与，小仓位试错低位首板或超跌反弹，严格止损。');
+
+    return html;
+  }
+
   function refreshDailyReview() {
     var todayKey = realMarketData.date;
     var data = dailyData[todayKey];
@@ -2525,6 +2563,67 @@
       data.noon.vsPrev = noonScore > 55 ? '强于昨日' : (noonScore > 40 ? '持平' : '弱于昨日');
       data.sh.vsYday = emotionScore > 60 ? '转强' : (emotionScore > 40 ? '持平' : '转弱');
       data.sh.vsYdayClass = emotionScore > 60 ? 'stronger' : (emotionScore > 40 ? 'flat' : 'weaker');
+
+      // --- 更新大盘指数 ---
+      if (live.sh) {
+        data.sh.open = live.sh.open || data.sh.open;
+        data.sh.change = (live.sh.change || 0).toFixed(2);
+        data.sh.status = live.sh.change >= 0.5 ? '高开' : (live.sh.change <= -0.5 ? '低开' : '平开');
+        data.sh.statusClass = live.sh.change >= 0 ? 'up' : 'down';
+      }
+      if (live.cyb) {
+        data.cyb.open = live.cyb.open || data.cyb.open;
+        data.cyb.change = (live.cyb.change || 0).toFixed(2);
+        data.cyb.upCount = live.market.upCount || data.cyb.upCount;
+        data.cyb.downCount = live.market.downCount || data.cyb.downCount;
+      }
+
+      // --- 更新明日预测（基于当日情绪） ---
+      data.tomorrow.openPred = emotionScore > 70 ? '高开' : (emotionScore > 45 ? '平开' : '低开');
+      data.tomorrow.volPred = limitUpCount > 60 ? '放量' : (limitUpCount > 30 ? '持平' : '缩量');
+      data.tomorrow.trendPred = emotionScore > 70 ? '冲高延续' : (emotionScore > 50 ? '震荡上行' : (emotionScore > 30 ? '震荡整理' : '低开低走'));
+
+      // --- 更新明日关注板块 ---
+      if (sectors && sectors.length > 0) {
+        var topSectorsForTom = sectors.slice().sort(function(a, b) { return b.today - a.today; }).slice(0, 6);
+        data.tomorrow.sectors = topSectorsForTom.map(function(sec) {
+          var luStocks = stocks.filter(function(st) {
+            return st.sector === sec.name && st.limitUp;
+          }).slice(0, 3).map(function(st) { return st.name; });
+          return {
+            name: sec.name,
+            reason: sec.today > 3 ? '板块强势，涨停潮' : (sec.today > 0 ? '走势活跃' : '超跌反弹'),
+            limitUpCount: sec.limitUp || 0,
+            limitUpStocks: luStocks
+          };
+        });
+      }
+
+      // --- 更新今日预期 ---
+      var topSecName = sectors && sectors.length > 0 ? sectors.slice().sort(function(a, b) { return b.today - a.today; })[0].name : '市场';
+      data.expectation = emotionScore > 70
+        ? '市场情绪高涨，' + topSecName + '领涨，赚钱效应明显，可积极参与强势板块。'
+        : (emotionScore > 50
+          ? topSecName + '表现活跃，结构性机会存在，轻仓参与前排龙头。'
+          : '市场情绪偏弱，' + topSecName + '相对抗跌，注意控制仓位，多看少动。');
+
+      // --- 更新持仓股票（从实时涨停和强势股中选） ---
+      var posCandidates = stocks.filter(function(s) {
+        return s.limitUp || s.today > 5;
+      }).slice(0, 8).map(function(s) {
+        return {
+          code: s.code, name: s.name, sector: s.sector,
+          reason: s.limitUp ? (s.boardType + '龙头') : '强势趋势',
+          price: s.price, d5: s.d5 || 0, today: s.today,
+          category: s.limitUp ? 'trend' : 'start', lianban: s.lianban || 0
+        };
+      });
+      if (posCandidates.length > 0) {
+        data.positions = posCandidates;
+      }
+
+      // --- 更新复盘详情 ---
+      data.summary.detail = buildDailySummaryDetail(data, emotionScore, limitUpCount, limitDownCount);
     }
 
     // 持久化到数据库
@@ -2542,22 +2641,29 @@
     var baseDate = realMarketData.date;
     var dates = [];
 
-    // 生成最近7天数据（优先从数据库读取）
+    // 生成最近7天数据
     for (var i = 6; i >= 0; i--) {
       var d = new Date(baseDate);
       d.setDate(d.getDate() - i);
       var dateStr = Timeline.formatFull(d);
       dates.push(dateStr);
 
-      // 先查数据库
-      var dbDay = MarketDB.getDay(dateStr);
-      if (dbDay && dbDay.dailyReview) {
-        dailyData[dateStr] = dbDay.dailyReview;
-      } else {
-        // 生成并存入数据库
+      var isToday = dateStr === baseDate;
+      var dbDay = null;
+      if (MarketDB && MarketDB.getDay) {
+        dbDay = MarketDB.getDay(dateStr);
+      }
+
+      // 当日数据：强制重新生成（确保数据是最新的）
+      // 历史数据：优先从数据库读取
+      if (isToday || !dbDay || !dbDay.dailyReview) {
         var genData = generateDailyData(dateStr);
         dailyData[dateStr] = genData;
-        MarketDB.updateDay(dateStr, { dailyReview: genData });
+        if (MarketDB && MarketDB.updateDay) {
+          MarketDB.updateDay(dateStr, { dailyReview: genData });
+        }
+      } else {
+        dailyData[dateStr] = dbDay.dailyReview;
       }
     }
 
@@ -2565,6 +2671,19 @@
     renderDailyReview(currentDailyDate);
     // 注册到全局时间线
     Timeline.register('daily_review', currentDailyDate);
+
+    // 更新日期选择器
+    var selectEl = document.getElementById('daily-date-select');
+    if (selectEl) {
+      selectEl.innerHTML = '';
+      dates.forEach(function(ds) {
+        var opt = document.createElement('option');
+        opt.value = ds;
+        opt.textContent = ds;
+        if (ds === baseDate) opt.selected = true;
+        selectEl.appendChild(opt);
+      });
+    }
   }
 
   // Expose for charts.js to call
