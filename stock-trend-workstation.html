@@ -357,6 +357,15 @@
     font-weight: 600;
   }
 
+  /* 模块标题时间显示 */
+  .module-update-time {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 400;
+    font-family: 'SF Mono', 'Menlo', 'Consolas', monospace;
+    letter-spacing: 0.5px;
+  }
+
   /* Market overview */
   .market-stats {
     display: grid;
@@ -3659,6 +3668,7 @@
         <div class="funnel-title">
           <div class="funnel-title-icon">🔍</div>
           四层漏斗筛选
+          <span id="funnel-update-time" class="module-update-time" title="数据更新时间">--:--:--</span>
         </div>
 
         <div class="funnel-step active" data-layer="1" onclick="selectLayer(1)">
@@ -3890,7 +3900,7 @@
       <div class="analysis-main">
         <div class="panel">
           <div class="panel-header">
-            <div class="panel-title">个股分析与学习辅助</div>
+            <div class="panel-title">个股分析与学习辅助<span id="analysis-update-time" class="module-update-time" title="数据更新时间">--:--:--</span></div>
           </div>
 
           <div class="stock-search">
@@ -4441,6 +4451,7 @@
             <div class="panel-title">
               连板梯队
               <span class="panel-title-badge" style="background:rgba(239,68,68,0.1);color:var(--up)">7只连板</span>
+              <span id="ladder-update-time" class="module-update-time" title="数据更新时间">--:--:--</span>
             </div>
           </div>
           <div class="board-ladder" id="board-ladder">
@@ -4978,6 +4989,7 @@
     <div class="sector-rotation-wrap">
       <div class="sector-rotation-title">
         <span>🔄</span> 板块轮动关联分析 · 情绪周期战法视角
+        <span id="rotation-update-time" class="module-update-time" title="数据更新时间" style="margin-left:12px;">--:--:--</span>
         <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--muted);">数据日期：2026-09-04 · 东方财富</span>
       </div>
 
@@ -5184,7 +5196,7 @@
         <div class="dragon-title">
           <span>🐉</span> 龙头狙击 · 智能选股系统
           <span style="margin-left:8px;font-size:10px;font-weight:400;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,0.1);color:var(--success);">● 实时数据</span>
-          <span id="dragon-update-time" style="margin-left:auto;font-size:11px;color:var(--muted);">更新于 --:--:--</span>
+          <span id="dragon-update-time" class="module-update-time" title="数据更新时间" style="margin-left:auto;">--:--:--</span>
         </div>
         <!-- Dragon sub-tabs -->
         <div class="dragon-subtabs">
@@ -5379,6 +5391,7 @@
       <div class="daily-header">
         <div class="daily-title">
           <span>📋</span> 每日复盘 · 交易计划与情绪监控
+          <span id="daily-update-time" class="module-update-time" title="数据更新时间" style="margin-left:12px;">--:--:--</span>
           <span style="margin-left:8px;font-size:10px;font-weight:400;padding:2px 8px;border-radius:10px;background:rgba(16,185,129,0.1);color:var(--success);">● 东方财富实时数据</span>
           <span style="margin-left:auto;font-size:11px;font-weight:400;color:var(--muted);">
             <select id="daily-date-select" onchange="switchDailyDate(this.value)" style="background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:2px 6px;color:var(--ink);font-size:11px;">
@@ -5710,7 +5723,7 @@
         <div class="tactic-page-title">
           <span class="tactic-page-icon">🎯</span>
           <div>
-            <h2>战法选股</h2>
+            <h2>战法选股<span id="tactic-update-time" class="module-update-time" title="数据更新时间" style="margin-left:10px;">--:--:--</span></h2>
             <p>自定义选股条件，智能筛选符合策略的股票</p>
           </div>
         </div>

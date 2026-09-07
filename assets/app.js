@@ -812,6 +812,37 @@
     return num.toFixed(0);
   }
 
+  // 统一更新所有模块标题旁的时间戳显示
+  function updateModuleTimestamps() {
+    var now = new Date();
+    var timeStr = now.getHours().toString().padStart(2, '0') + ':' +
+                  now.getMinutes().toString().padStart(2, '0') + ':' +
+                  now.getSeconds().toString().padStart(2, '0');
+
+    var moduleIds = [
+      'funnel-update-time',    // 四层漏斗筛选
+      'analysis-update-time',  // 个股分析
+      'ladder-update-time',    // 连板梯队
+      'rotation-update-time',  // 板块轮动
+      'dragon-update-time',    // 龙头狙击
+      'daily-update-time',     // 每日复盘
+      'tactic-update-time'     // 战法选股
+    ];
+
+    moduleIds.forEach(function(id) {
+      var el = document.getElementById(id);
+      if (el) {
+        el.textContent = timeStr;
+        // 添加更新闪烁效果
+        el.style.transition = 'color 0.3s';
+        el.style.color = 'var(--success)';
+        setTimeout(function() {
+          if (el) el.style.color = '';
+        }, 1500);
+      }
+    });
+  }
+
   // 使用静态数据完成刷新（fallback，当API不可用时）
   function finishRefreshWithStatic() {
     sectors.forEach(function(s) {
@@ -902,6 +933,9 @@
     nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 1000); // 30秒
     isUpdating = false;
 
+    // 更新所有模块标题旁的时间戳
+    updateModuleTimestamps();
+
     // 9. 状态提示
     var timeEl = document.getElementById('data-update-time');
     if (timeEl) {
@@ -991,6 +1025,7 @@
     renderStockGrid('stock-grid-classify', 'all');
     setupCategoryFilters();
     updateTimeDisplay();
+    updateModuleTimestamps(); // 初始化模块时间显示
     initDailyReview();
     initDragonModule();
     initLadderHistory();
