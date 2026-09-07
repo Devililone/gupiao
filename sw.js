@@ -3,7 +3,7 @@
  * 功能：离线缓存 / OTA热更新 / 数据预取 / 后台同步
  */
 
-var CACHE_VERSION = 'v1.3.0';
+var CACHE_VERSION = 'v1.3.1';
 var STATIC_CACHE = 'stock-trend-static-' + CACHE_VERSION;
 var DATA_CACHE = 'stock-trend-data-' + CACHE_VERSION;
 var RUNTIME_CACHE = 'stock-trend-runtime-' + CACHE_VERSION;

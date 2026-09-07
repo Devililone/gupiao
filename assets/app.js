@@ -846,9 +846,19 @@
       window.refreshSectorCharts(getSortedSectors());
     }
 
-    // 3. 每日复盘
+    // 3. 每日复盘（如果当天数据不存在则先生成）
     if (typeof refreshDailyReview === 'function') {
-      refreshDailyReview();
+      var todayKey = realMarketData.date;
+      if (!dailyData[todayKey] && typeof generateDailyData === 'function') {
+        dailyData[todayKey] = generateDailyData(todayKey);
+        if (MarketDB && MarketDB.updateDay) {
+          MarketDB.updateDay(todayKey, { dailyReview: dailyData[todayKey] });
+        }
+      }
+      if (dailyData[todayKey]) {
+        currentDailyDate = todayKey;
+        refreshDailyReview();
+      }
     }
 
     // 4. 龙头狙击
@@ -868,9 +878,9 @@
         if (MarketDB && MarketDB.updateDay) {
           MarketDB.updateDay(realMarketData.date, { ladder: newLadder });
         }
-        if (currentLadderDate === realMarketData.date) {
-          renderBoardLadder(realMarketData.date);
-        }
+        // 始终切换到当日数据并渲染
+        currentLadderDate = realMarketData.date;
+        renderBoardLadder(realMarketData.date);
       } catch(e) { console.warn('[Ladder] 刷新失败:', e); }
     }
 
@@ -1024,11 +1034,17 @@
 
   // ==================== Daily Review Module ====================
   var dailyData = {};
-  var currentDailyDate = '2026-09-04';
+  var currentDailyDate = _todayStr;
 
-  // ================ Real Eastmoney Data (2026-09-04) ================
+  // ================ Real Eastmoney Data (动态初始日期) ================
+  // 初始使用今天日期，页面加载后从东方财富API刷新真实数据和日期
+  var _today = new Date();
+  var _todayStr = _today.getFullYear() + '-' +
+    (_today.getMonth() + 1 < 10 ? '0' : '') + (_today.getMonth() + 1) + '-' +
+    (_today.getDate() < 10 ? '0' : '') + _today.getDate();
+
   var realMarketData = {
-    date: '2026-09-04',
+    date: _todayStr,
     sh: {
       open: '3955.55',
       close: '3930.12',
