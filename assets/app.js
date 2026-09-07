@@ -2501,7 +2501,12 @@
 
       // 对比
       data.close.vsOpen = limitUpCount > 40 ? '强于开盘' : (limitUpCount > 20 ? '持平' : '弱于开盘');
+      data.close.vsNoon = limitUpCount > data.noon.limitUp * 1.2 ? '强于午盘' : (limitUpCount > data.noon.limitUp * 0.9 ? '持平' : '弱于午盘');
       data.close.vsPrev = emotionScore > 60 ? '强于昨日' : (emotionScore > 40 ? '持平' : '弱于昨日');
+      data.tenOclock.vsOpen = '开盘阶段';
+      data.tenOclock.vsPrev = tenScore > 50 ? '强于昨日' : (tenScore > 35 ? '持平' : '弱于昨日');
+      data.noon.vsTen = data.noon.limitUp > data.tenOclock.limitUp * 1.3 ? '强于10点' : (data.noon.limitUp > data.tenOclock.limitUp * 0.9 ? '持平' : '弱于10点');
+      data.noon.vsPrev = noonScore > 55 ? '强于昨日' : (noonScore > 40 ? '持平' : '弱于昨日');
       data.sh.vsYday = emotionScore > 60 ? '转强' : (emotionScore > 40 ? '持平' : '转弱');
       data.sh.vsYdayClass = emotionScore > 60 ? 'stronger' : (emotionScore > 40 ? 'flat' : 'weaker');
     }
