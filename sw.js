@@ -3,7 +3,7 @@
  * 功能：离线缓存 / OTA热更新 / 数据预取 / 后台同步
  */
 
-var CACHE_VERSION = 'v1.0.2';
+var CACHE_VERSION = 'v1.1.0';
 var STATIC_CACHE = 'stock-trend-static-' + CACHE_VERSION;
 var DATA_CACHE = 'stock-trend-data-' + CACHE_VERSION;
 var RUNTIME_CACHE = 'stock-trend-runtime-' + CACHE_VERSION;
@@ -14,6 +14,7 @@ var APP_SHELL = [
   './stock-trend-workstation.html',
   './assets/app.js',
   './assets/charts.js',
+  './assets/eastmoney-data.js',
   './assets/app-config.js',
   './assets/mobile-ui.js',
   './_shared/js/echarts.min.js',
