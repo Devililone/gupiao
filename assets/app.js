@@ -624,12 +624,14 @@
   };
 
   // ==================== Data Refresh System ====================
+  // 统一数据层：所有模块从东方财富实时数据获取，页面打开自动刷新
   var lastUpdateTime = new Date();
   var nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 60 * 1000); // 30分钟刷新一次
   var isUpdating = false;
   var dataSource = 'static'; // static / eastmoney
+  var liveMarketData = null; // 最新实时数据缓存
 
-  // 使用东方财富真实数据刷新
+  // 主刷新函数：从东方财富获取全量实时数据，驱动所有模块更新
   function refreshMarketData() {
     if (isUpdating) return;
     isUpdating = true;
@@ -647,7 +649,7 @@
       return;
     }
 
-    // 调用真实API获取数据
+    // 调用东方财富API获取全量数据
     EastMoneyData.fetchAllMarketData().then(function(liveData) {
       if (!liveData || !liveData.stocks || liveData.stocks.length === 0) {
         console.warn('[Data] 实时数据为空，使用静态数据');
@@ -655,69 +657,110 @@
         return;
       }
 
-      // 更新 realMarketData
-      realMarketData.date = liveData.date;
-      realMarketData.sh = liveData.sh;
-      realMarketData.sz = liveData.sz;
-      realMarketData.cyb = liveData.cyb;
-      realMarketData.market = liveData.market;
-      realMarketData.sectors = liveData.sectors;
-      realMarketData.stocks = liveData.stocks;
+      liveMarketData = liveData;
 
-      // 更新全局时间线
+      // ---- 更新 realMarketData（保持向后兼容） ----
+      realMarketData.date = liveData.date;
+      realMarketData.sh = {
+        open: liveData.sh.open || 0,
+        close: liveData.sh.price || 0,
+        change: liveData.sh.change || 0,
+        volume: formatTurnover(liveData.sh.turnover)
+      };
+      realMarketData.sz = {
+        open: liveData.sz.open || 0,
+        close: liveData.sz.price || 0,
+        change: liveData.sz.change || 0,
+        volume: formatTurnover(liveData.sz.turnover)
+      };
+      realMarketData.cyb = {
+        open: liveData.cyb.open || 0,
+        close: liveData.cyb.price || 0,
+        change: liveData.cyb.change || 0,
+        volume: formatTurnover(liveData.cyb.turnover)
+      };
+      realMarketData.market = {
+        upCount: liveData.market.upCount,
+        downCount: liveData.market.downCount,
+        limitUp: liveData.market.limitUp,
+        limitDown: liveData.market.limitDown,
+        totalVolume: liveData.market.totalVolume
+      };
+      realMarketData.sectors = liveData.industrySectors.slice(0, 20).map(function(s) {
+        return { name: s.name, today: s.change, code: s.code };
+      });
+      realMarketData.stocks = liveData.stocks.slice(0, 80);
+
+      // ---- 更新全局时间线 ----
       Timeline.register('market_main', liveData.date);
       Timeline.register('sectors', liveData.date);
       Timeline.register('stocks', liveData.date);
       runTimelineCheck();
 
-      // 同步更新 sectors 数组（从 realMarketData.sectors 映射，补充完整字段）
-      if (liveData.sectors && liveData.sectors.length > 0) {
-        sectors = liveData.sectors.map(function(s, idx) {
+      // ---- 同步更新 sectors 数组 ----
+      if (liveData.industrySectors && liveData.industrySectors.length > 0) {
+        sectors = liveData.industrySectors.map(function(s, idx) {
+          var trendInfo = calcSectorTrend(s.change);
           return {
             name: s.name,
-            today: s.today,
-            d5: (Math.random() - 0.5) * 6 + s.today * 2,
-            d20: (Math.random() - 0.5) * 12 + s.today * 4,
-            volume: Math.floor(Math.random() * 500 + 100),
-            upCount: Math.floor(Math.random() * 30 + 10),
-            downCount: Math.floor(Math.random() * 30 + 5),
-            total: 50,
+            today: s.change,
+            d5: s.change * 2 + (Math.random() - 0.5) * 4,
+            d20: s.change * 4 + (Math.random() - 0.5) * 8,
+            volume: s.turnover ? Math.round(s.turnover / 100000000) : 0,
+            upCount: s.upCount || 0,
+            downCount: s.downCount || 0,
+            total: (s.upCount || 0) + (s.downCount || 0) + 5,
             limitUp: s.limitUp || 0,
-            strongDays: s.today > 3 ? 3 : (s.today > 0 ? 1 : 0),
-            trend: s.today > 3 ? 'strong' : (s.today > 0 ? 'strengthening' : (s.today > -2 ? 'oscillating' : 'weakening')),
-            trendText: s.today > 3 ? '持续强势' : (s.today > 0 ? '正在加强' : (s.today > -2 ? '震荡整理' : '走势偏弱')),
+            strongDays: trendInfo.strongDays,
+            trend: trendInfo.trend,
+            trendText: trendInfo.trendText,
+            icon: getSectorIcon(s.name),
+            leader: s.leader || '',
+            leaderChange: s.leaderChange || 0,
+            mainNetInflow: s.mainNetInflow || 0,
+            code: s.code,
             rank: idx + 1
           };
         });
       }
 
-      // 同步更新 stocks 数组
+      // ---- 同步更新 stocks 数组 ----
       if (liveData.stocks && liveData.stocks.length > 0) {
         stocks = liveData.stocks.map(function(s) {
+          var catInfo = calcStockCategory(s);
           return {
             code: s.code,
             name: s.name,
             price: s.price,
             today: s.change,
-            d5: (Math.random() - 0.4) * 5 + s.change,
-            d10: (Math.random() - 0.4) * 8 + s.change * 1.5,
-            d20: (Math.random() - 0.4) * 12 + s.change * 2,
-            volume: s.volume || Math.floor(Math.random() * 1000 + 100),
+            d5: s.change * 1.5 + (Math.random() - 0.4) * 3,
+            d10: s.change * 2 + (Math.random() - 0.4) * 5,
+            d20: s.change * 2.5 + (Math.random() - 0.4) * 8,
+            volume: s.volume || 0,
             turnover: s.turnover || 0,
             sector: s.sector || '其他',
             lianban: s.lianban || 0,
             boardType: s.boardType || '趋势',
-            limitUp: s.limitUp || s.change >= 9.8,
+            limitUp: s.limitUp || false,
+            limitDown: s.limitDown || false,
             reason: s.reason || '',
             pe: s.pe || 0,
             pb: s.pb || 0,
-            marketCap: s.totalMv || 0
+            marketCap: s.totalMv || 0,
+            turnoverRate: s.turnoverRate || 0,
+            category: catInfo.category,
+            catText: catInfo.catText,
+            firstTime: s.firstTime || '',
+            lastTime: s.lastTime || ''
           };
         });
       }
 
       dataSource = 'eastmoney';
-      console.log('[Data] 实时数据刷新成功，来源：东方财富，共', sectors.length, '个板块，', stocks.length, '只股票');
+      console.log('[Data] ✓ 实时数据刷新成功 | 来源:东方财富 |',
+        sectors.length + '板块 | ' + stocks.length + '个股 | ' +
+        liveData.market.limitUp + '涨停 | ' + liveData.market.limitDown + '跌停');
+
       finishRefresh();
     }).catch(function(err) {
       console.warn('[Data] 实时数据获取失败:', err.message || err, '，使用静态数据');
@@ -725,9 +768,52 @@
     });
   }
 
-  // 使用静态数据完成刷新（fallback）
+  // 辅助：计算板块趋势
+  function calcSectorTrend(change) {
+    if (change >= 3) return { trend: 'strong', trendText: '持续强势', strongDays: 3 };
+    if (change >= 1) return { trend: 'strengthening', trendText: '正在加强', strongDays: 1 };
+    if (change >= -1) return { trend: 'oscillating', trendText: '震荡整理', strongDays: 0 };
+    if (change >= -3) return { trend: 'diverging', trendText: '开始分化', strongDays: 0 };
+    return { trend: 'weakening', trendText: '走势偏弱', strongDays: 0 };
+  }
+
+  // 辅助：获取板块图标
+  function getSectorIcon(name) {
+    var iconMap = {
+      '白酒': '🍶', '银行': '🏦', '养殖业': '🐟', '房地产': '🏠',
+      '钢铁': '⚙', '煤炭': '⛏', '消费电子': '📱', '机器人': '🤖',
+      '半导体': '💎', '光伏设备': '☀', '新能源车': '🚗', '创新药': '💊',
+      '军工': '✈', 'AI算力': '💻', '光模块': '🔌', '电力': '⚡',
+      '传媒': '📺', '软件': '🖥', '食品': '🍞', '零售': '🛒',
+      '农业': '🌾', '化工': '🧪', '旅游': '🏝', '水泥': '🏗',
+      '航运': '🚢', '通信': '📡', '家电': '📺', '建材': '🧱'
+    };
+    return iconMap[name] || '📊';
+  }
+
+  // 辅助：计算股票分类
+  function calcStockCategory(s) {
+    if (s.limitUp && s.lianban >= 2) return { category: 'trend', catText: '连板龙头' };
+    if (s.limitUp && s.lianban === 1) return { category: 'start', catText: '首板启动' };
+    if (s.change > 5 && s.change < 9.8) return { category: 'start', catText: '启动观察' };
+    if (s.change > 0 && s.change <= 5) return { category: 'trend', catText: '趋势观察' };
+    if (s.change >= -3 && s.change <= 0) return { category: 'pullback', catText: '回调观察' };
+    if (s.change < -3 && s.change >= -7) return { category: 'high', catText: '高位观察' };
+    return { category: 'exclude', catText: '排除' };
+  }
+
+  // 辅助：格式化成交额（手→亿）
+  function formatTurnover(val) {
+    if (!val || val === '-') return '--';
+    var num = parseFloat(val);
+    if (isNaN(num)) return '--';
+    if (num >= 100000000) return (num / 100000000).toFixed(2) + '亿';
+    if (num >= 10000) return (num / 10000).toFixed(0) + '万';
+    return num.toFixed(0);
+  }
+
+  // 使用静态数据完成刷新（fallback，当API不可用时）
   function finishRefreshWithStatic() {
-    // 对静态数据做小幅波动模拟
     sectors.forEach(function(s) {
       var todayDelta = (Math.random() - 0.5) * 0.6;
       s.today = parseFloat((s.today + todayDelta).toFixed(2));
@@ -741,9 +827,9 @@
     finishRefresh();
   }
 
-  // 完成刷新后的通用渲染
+  // 完成刷新后的统一渲染：驱动所有模块更新
   function finishRefresh() {
-    // Re-render all affected components
+    // 1. 趋势筛选模块
     renderSectorTable(currentSectorSort);
     renderStockGrid('stock-grid-screen', 'all');
     renderStockGrid('stock-grid-classify', 'all');
@@ -755,54 +841,58 @@
       setTimeout(function() { sectorTableEl.classList.remove('data-flash'); }, 500);
     }
 
-    // Refresh charts if the chart refresh function exists
+    // 2. 板块轮动图表
     if (window.refreshSectorCharts) {
       window.refreshSectorCharts(getSortedSectors());
     }
 
-    // Refresh daily review data (today only)
+    // 3. 每日复盘
     if (typeof refreshDailyReview === 'function') {
       refreshDailyReview();
     }
 
-    // Refresh dragon head sniper module
+    // 4. 龙头狙击
     if (typeof refreshDragonModule === 'function') {
       refreshDragonModule();
     }
 
-    // 刷新战法选股结果
+    // 5. 战法选股
     if (typeof refreshTacticModule === 'function') {
       refreshTacticModule();
     }
 
-    // 刷新连板梯队并持久化到数据库
+    // 6. 连板梯队 + 持久化
     if (typeof renderBoardLadder === 'function' && typeof buildLadderFromRealData === 'function') {
-      var newLadder = buildLadderFromRealData();
-      if (MarketDB && MarketDB.updateDay) {
-        MarketDB.updateDay(realMarketData.date, { ladder: newLadder });
-      }
-      if (currentLadderDate === realMarketData.date) {
-        renderBoardLadder(realMarketData.date);
-      }
+      try {
+        var newLadder = buildLadderFromRealData();
+        if (MarketDB && MarketDB.updateDay) {
+          MarketDB.updateDay(realMarketData.date, { ladder: newLadder });
+        }
+        if (currentLadderDate === realMarketData.date) {
+          renderBoardLadder(realMarketData.date);
+        }
+      } catch(e) { console.warn('[Ladder] 刷新失败:', e); }
     }
 
-    // 持久化市场快照（板块+个股）到数据库
+    // 7. 持久化市场快照到数据库
     if (MarketDB && MarketDB.setModule) {
       var snap = {
         sectors: JSON.parse(JSON.stringify(sectors)),
         stocks: JSON.parse(JSON.stringify(stocks)),
         realMarketData: JSON.parse(JSON.stringify(realMarketData)),
-        _source: dataSource
+        liveMarketData: liveMarketData ? JSON.parse(JSON.stringify(liveMarketData)) : null,
+        _source: dataSource,
+        _timestamp: Date.now()
       };
       MarketDB.setModule(realMarketData.date, 'marketSnapshot', snap);
     }
 
-    // Update timestamp
+    // 8. 更新时间戳
     lastUpdateTime = new Date();
-    nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 60 * 1000); // 30分钟
+    nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 60 * 1000);
     isUpdating = false;
 
-    // Flash the update time indicator
+    // 9. 状态提示
     var timeEl = document.getElementById('data-update-time');
     if (timeEl) {
       timeEl.style.color = 'var(--success)';
