@@ -928,6 +928,24 @@
 
   function updateTimeDisplay() {
     var timeEl = document.getElementById('data-update-time');
+    var marketTimeEl = document.getElementById('market-time-status');
+
+    // 更新交易时段状态
+    if (marketTimeEl && typeof EastMoneyData !== 'undefined' && EastMoneyData.MarketTime) {
+      var mt = EastMoneyData.MarketTime.getInfo();
+      var statusColor = 'var(--success)';
+      if (mt.phaseStatus === 'trading') statusColor = 'var(--up)';
+      else if (mt.phaseStatus === 'closed') statusColor = 'var(--muted)';
+      else if (mt.phaseStatus === 'break') statusColor = 'var(--warning)';
+      else if (mt.phaseStatus === 'auction') statusColor = 'var(--accent)';
+      else statusColor = 'var(--accent)';
+
+      marketTimeEl.style.color = statusColor;
+      marketTimeEl.textContent = mt.weekdayText + ' ' + mt.phaseText +
+        (mt.nextPhaseSeconds > 0 && mt.phaseStatus !== 'closed' ? ' · ' + mt.countdownText : '');
+      marketTimeEl.title = mt.date + ' ' + mt.timeText + ' · ' + mt.weekdayText;
+    }
+
     if (!timeEl) return;
 
     var now = new Date();
@@ -941,7 +959,7 @@
     } else {
       var secs = Math.ceil(diff / 1000);
       var statusText = isUpdating ? '数据更新中...' :
-        '数据更新于 ' + formatDate(lastUpdateTime) + ' · ' + secs + '秒后刷新';
+        '更新于 ' + formatDate(lastUpdateTime) + ' · ' + secs + '秒后刷新';
       timeEl.textContent = statusText;
     }
   }

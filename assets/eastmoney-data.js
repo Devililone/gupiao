@@ -512,6 +512,176 @@ var EastMoneyData = (function() {
     return (num > 0 ? '+' : '') + num.toFixed(2) + '%';
   }
 
+  // ==================== 时间识别模块 ====================
+  // 交易日判断、星期识别、交易时段划分
+  var MarketTime = (function() {
+    var WEEKDAYS = ['周日', '周一', '周二', '周三', '周四', '周五', '周六'];
+
+    // 已知节假日（2026年主要节假日，简化处理）
+    var HOLIDAYS_2026 = [
+      '2026-01-01', '2026-01-02', '2026-01-03', // 元旦
+      '2026-02-16', '2026-02-17', '2026-02-18', '2026-02-19', '2026-02-20', // 春节
+      '2026-04-06', '2026-04-07', // 清明
+      '2026-05-01', '2026-05-04', '2026-05-05', // 五一
+      '2026-06-19', '2026-06-22', // 端午
+      '2026-10-01', '2026-10-02', '2026-10-05', '2026-10-06', '2026-10-07', '2026-10-08' // 国庆
+    ];
+
+    function getInfo(date) {
+      date = date || new Date();
+      var y = date.getFullYear();
+      var m = date.getMonth() + 1;
+      var d = date.getDate();
+      var day = date.getDay(); // 0=周日, 1-5=工作日, 6=周六
+      var dateStr = y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+
+      var isWeekend = day === 0 || day === 6;
+      var isHoliday = HOLIDAYS_2026.indexOf(dateStr) >= 0;
+      var isTradingDay = !isWeekend && !isHoliday;
+
+      var hour = date.getHours();
+      var minute = date.getMinutes();
+      var timeMin = hour * 60 + minute;
+
+      // 交易时段划分
+      var phase, phaseText, phaseStatus;
+      if (!isTradingDay) {
+        phase = 'closed';
+        phaseText = isWeekend ? '周末休市' : '节假日休市';
+        phaseStatus = 'closed';
+      } else if (timeMin < 540) {
+        // 9:00前
+        phase = 'pre';
+        phaseText = '集合竞价前';
+        phaseStatus = 'pre';
+      } else if (timeMin < 570) {
+        // 9:00-9:30
+        phase = 'auction';
+        phaseText = '集合竞价';
+        phaseStatus = 'auction';
+      } else if (timeMin < 690) {
+        // 9:30-11:30 早盘
+        phase = 'morning';
+        phaseText = '早盘交易';
+        phaseStatus = 'trading';
+      } else if (timeMin < 780) {
+        // 11:30-13:00 午休
+        phase = 'noon';
+        phaseText = '午间休市';
+        phaseStatus = 'break';
+      } else if (timeMin < 900) {
+        // 13:00-15:00 午盘
+        phase = 'afternoon';
+        phaseText = '午盘交易';
+        phaseStatus = 'trading';
+      } else {
+        phase = 'post';
+        phaseText = '收盘';
+        phaseStatus = 'closed';
+      }
+
+      // 距下一阶段倒计时（秒）
+      var nextPhaseSeconds = 0;
+      var nextPhaseText = '';
+      if (phase === 'pre') { nextPhaseSeconds = (540 - timeMin) * 60; nextPhaseText = '距集合竞价'; }
+      else if (phase === 'auction') { nextPhaseSeconds = (570 - timeMin) * 60; nextPhaseText = '距开盘'; }
+      else if (phase === 'morning') { nextPhaseSeconds = (690 - timeMin) * 60; nextPhaseText = '距午间休市'; }
+      else if (phase === 'noon') { nextPhaseSeconds = (780 - timeMin) * 60; nextPhaseText = '距下午开盘'; }
+      else if (phase === 'afternoon') { nextPhaseSeconds = (900 - timeMin) * 60; nextPhaseText = '距收盘'; }
+      else {
+        // 已收盘或休市，计算距下一个交易日开盘的时间
+        var nextOpen = new Date(date);
+        nextOpen.setHours(9, 30, 0, 0);
+        // 如果已收盘，跳到下一天
+        if (phase === 'post') {
+          nextOpen.setDate(nextOpen.getDate() + 1);
+        }
+        // 跳过周末和节假日
+        while (true) {
+          var nd = nextOpen.getDay();
+          var ns = nextOpen.getFullYear() + '-' +
+            (nextOpen.getMonth() + 1 < 10 ? '0' : '') + (nextOpen.getMonth() + 1) + '-' +
+            (nextOpen.getDate() < 10 ? '0' : '') + nextOpen.getDate();
+          var ndIsWeekend = nd === 0 || nd === 6;
+          var ndIsHoliday = HOLIDAYS_2026.indexOf(ns) >= 0;
+          if (!ndIsWeekend && !ndIsHoliday) break;
+          nextOpen.setDate(nextOpen.getDate() + 1);
+        }
+        nextPhaseSeconds = Math.floor((nextOpen.getTime() - date.getTime()) / 1000);
+        nextPhaseText = '距下次开盘';
+      }
+
+      // 格式化倒计时
+      var countdownText = '';
+      if (nextPhaseSeconds > 0) {
+        var h = Math.floor(nextPhaseSeconds / 3600);
+        var mi = Math.floor((nextPhaseSeconds % 3600) / 60);
+        var s = nextPhaseSeconds % 60;
+        if (h > 0) {
+          countdownText = h + '小时' + (mi < 10 ? '0' + mi : mi) + '分';
+        } else if (mi > 0) {
+          countdownText = mi + '分' + (s < 10 ? '0' + s : s) + '秒';
+        } else {
+          countdownText = s + '秒';
+        }
+      }
+
+      return {
+        date: dateStr,
+        year: y,
+        month: m,
+        day: d,
+        weekday: day,
+        weekdayText: WEEKDAYS[day],
+        isWeekend: isWeekend,
+        isHoliday: isHoliday,
+        isTradingDay: isTradingDay,
+        phase: phase,
+        phaseText: phaseText,
+        phaseStatus: phaseStatus,
+        hour: hour,
+        minute: minute,
+        timeText: (hour < 10 ? '0' + hour : hour) + ':' + (minute < 10 ? '0' + minute : minute),
+        nextPhaseText: nextPhaseText,
+        nextPhaseSeconds: nextPhaseSeconds,
+        countdownText: countdownText
+      };
+    }
+
+    // 格式化日期为 YYYY-MM-DD
+    function formatDate(date) {
+      var y = date.getFullYear();
+      var m = date.getMonth() + 1;
+      var d = date.getDate();
+      return y + '-' + (m < 10 ? '0' + m : m) + '-' + (d < 10 ? '0' + d : d);
+    }
+
+    // 获取最近N个交易日（往前推）
+    function getRecentTradingDays(n, endDate) {
+      n = n || 7;
+      endDate = endDate || new Date();
+      var days = [];
+      var d = new Date(endDate);
+      while (days.length < n) {
+        var info = getInfo(d);
+        if (info.isTradingDay) {
+          days.push(info.date);
+        }
+        d.setDate(d.getDate() - 1);
+        // 安全起见，最多回溯30天
+        if (days.length === 0 && d < new Date(endDate.getTime() - 30 * 86400000)) break;
+      }
+      return days.reverse();
+    }
+
+    return {
+      getInfo: getInfo,
+      formatDate: formatDate,
+      getRecentTradingDays: getRecentTradingDays,
+      WEEKDAYS: WEEKDAYS
+    };
+  })();
+
   return {
     jsonp: jsonp,
     getIndexData: getIndexData,
@@ -524,6 +694,7 @@ var EastMoneyData = (function() {
     getNorthboundFund: getNorthboundFund,
     fetchAllMarketData: fetchAllMarketData,
     formatAmount: formatAmount,
-    formatPercent: formatPercent
+    formatPercent: formatPercent,
+    MarketTime: MarketTime
   };
 })();
