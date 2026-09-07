@@ -626,7 +626,7 @@
   // ==================== Data Refresh System ====================
   // 统一数据层：所有模块从东方财富实时数据获取，页面打开自动刷新
   var lastUpdateTime = new Date();
-  var nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 60 * 1000); // 30分钟刷新一次
+  var nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 1000); // 30秒刷新一次
   var isUpdating = false;
   var dataSource = 'static'; // static / eastmoney
   var liveMarketData = null; // 最新实时数据缓存
@@ -889,7 +889,7 @@
 
     // 8. 更新时间戳
     lastUpdateTime = new Date();
-    nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 60 * 1000);
+    nextUpdateTime = new Date(lastUpdateTime.getTime() + 30 * 1000); // 30秒
     isUpdating = false;
 
     // 9. 状态提示
@@ -929,11 +929,9 @@
       timeEl.textContent = '数据更新中...';
       timeEl.style.color = 'var(--warning)';
     } else {
-      var mins = Math.floor(diff / 60000);
-      var secs = Math.floor((diff % 60000) / 1000);
+      var secs = Math.ceil(diff / 1000);
       var statusText = isUpdating ? '数据更新中...' :
-        '数据更新于 ' + formatDate(lastUpdateTime) + ' · 距下次更新 ' +
-        (mins > 0 ? mins + '分' : '') + (secs < 10 ? '0' + secs : secs) + '秒';
+        '数据更新于 ' + formatDate(lastUpdateTime) + ' · ' + secs + '秒后刷新';
       timeEl.textContent = statusText;
     }
   }
@@ -1685,28 +1683,54 @@
     var maxBoard = 0;
     var totalLimitUp = 0;
 
-    if (realMarketData && realMarketData.stocks) {
-      for (var i = 0; i < realMarketData.stocks.length; i++) {
-        var s = realMarketData.stocks[i];
-        if (s.limitUp && s.lianban >= 1) {
-          var b = s.lianban;
-          if (!groups[b]) groups[b] = [];
-          groups[b].push({
-            name: s.name,
-            code: s.code,
-            today: s.today,
-            lianban: b,
-            sector: s.sector,
-            reason: s.reason || ''
-          });
-          if (b > maxBoard) maxBoard = b;
-          totalLimitUp++;
-        }
+    // 优先使用 liveMarketData.limitUpPool（最准确的涨停板数据）
+    var sourceStocks = [];
+    if (liveMarketData && liveMarketData.limitUpPool && liveMarketData.limitUpPool.length > 0) {
+      sourceStocks = liveMarketData.limitUpPool;
+    } else if (realMarketData && realMarketData.stocks) {
+      sourceStocks = realMarketData.stocks.filter(function(s) { return s.limitUp; });
+    }
+
+    for (var i = 0; i < sourceStocks.length; i++) {
+      var s = sourceStocks[i];
+      var lianban = s.lianban || (s.limitUp ? 1 : 0);
+      if (lianban >= 1) {
+        var b = lianban;
+        if (!groups[b]) groups[b] = [];
+        groups[b].push({
+          name: s.name,
+          code: s.code,
+          today: s.change || s.today || 10.0,
+          lianban: b,
+          sector: s.sector || '',
+          reason: s.reason || '',
+          firstTime: s.firstTime || '',
+          lastTime: s.lastTime || '',
+          openTimes: s.openTimes || 0
+        });
+        if (b > maxBoard) maxBoard = b;
+        totalLimitUp++;
       }
     }
 
-    // 首板如果从真实数据中提取的不足，补充一些非连板涨停股
-    if (!groups[1]) groups[1] = [];
+    // 如果首板为空但有其他连板，说明数据不完整，补充首板
+    if (!groups[1] || groups[1].length === 0) {
+      if (liveMarketData && liveMarketData.stocks) {
+        var firstBoard = liveMarketData.stocks.filter(function(s) {
+          return s.limitUp && (!s.lianban || s.lianban === 1);
+        });
+        if (firstBoard.length > 0) {
+          groups[1] = firstBoard.slice(0, 10).map(function(s) {
+            return {
+              name: s.name, code: s.code, today: s.change, lianban: 1,
+              sector: s.sector || '', reason: s.reason || ''
+            };
+          });
+          totalLimitUp += groups[1].length;
+          if (maxBoard === 0) maxBoard = 1;
+        }
+      }
+    }
 
     // 生成明日晋升预测
     var tomorrowGroups = {};
@@ -1716,6 +1740,7 @@
 
     for (var b3 = maxBoard; b3 >= 1; b3--) {
       var todays = groups[b3] || [];
+      if (todays.length === 0) continue;
       var advanceRate = b3 === 1 ? 0.15 : (b3 === 2 ? 0.25 : (b3 === 3 ? 0.35 : 0.5));
       var advanceCount = Math.max(1, Math.floor(todays.length * advanceRate + Math.random() * 2));
       advanceCount = Math.min(advanceCount, todays.length);
@@ -2312,82 +2337,174 @@
     var data = dailyData[todayKey];
     if (!data) return;
 
-    var fluct = function(base, pct) {
-      return base * (1 + (Math.random() - 0.5) * pct);
-    };
+    // === 使用东方财富实时数据更新日内情绪监控 ===
+    var live = liveMarketData;
+    if (!live || !live.stocks) {
+      // 无实时数据时做小幅波动
+      data.close.limitUp = Math.max(1, Math.floor(data.close.limitUp * (1 + (Math.random() - 0.5) * 0.06)));
+      data.close.limitDown = Math.max(1, Math.floor(data.close.limitDown * (1 + (Math.random() - 0.5) * 0.06)));
+    } else {
+      // --- 用实时数据更新收盘时段（即当前时段） ---
+      var limitUpCount = live.market.limitUp || 0;
+      var limitDownCount = live.market.limitDown || 0;
 
-    // Fluctuate limit up/down counts (±8%)
-    data.tenOclock.limitUp = Math.max(1, Math.floor(fluct(data.tenOclock.limitUp, 0.08)));
-    data.tenOclock.limitDown = Math.max(1, Math.floor(fluct(data.tenOclock.limitDown, 0.08)));
-    data.noon.limitUp = Math.max(1, Math.floor(fluct(data.noon.limitUp, 0.08)));
-    data.noon.limitDown = Math.max(1, Math.floor(fluct(data.noon.limitDown, 0.08)));
-    data.close.limitUp = Math.max(1, Math.floor(fluct(data.close.limitUp, 0.06)));
-    data.close.limitDown = Math.max(1, Math.floor(fluct(data.close.limitDown, 0.06)));
-    data.sh.limitUp = Math.max(1, Math.floor(fluct(data.sh.limitUp, 0.08)));
-    data.sh.limitDown = Math.max(1, Math.floor(fluct(data.sh.limitDown, 0.08)));
+      data.close.limitUp = limitUpCount;
+      data.close.limitDown = limitDownCount;
+      data.sh.limitUp = limitUpCount;
+      data.sh.limitDown = limitDownCount;
 
-    // Fluctuate sector data (±0.3%)
-    if (data.tenOclock.hotboards) {
-      data.tenOclock.hotboards.forEach(function(s) {
-        s.today = parseFloat((s.today + (Math.random() - 0.5) * 0.6).toFixed(2));
-      });
-      data.tenOclock.hotboards.sort(function(a, b) { return b.today - a.today; });
-    }
-    if (data.noon.hotboards) {
-      data.noon.hotboards.forEach(function(s) {
-        s.today = parseFloat((s.today + (Math.random() - 0.5) * 0.6).toFixed(2));
-      });
-      data.noon.hotboards.sort(function(a, b) { return b.today - a.today; });
-    }
-    if (data.close.hotboards) {
-      data.close.hotboards.forEach(function(s) {
-        s.today = parseFloat((s.today + (Math.random() - 0.5) * 0.6).toFixed(2));
-      });
-      data.close.hotboards.sort(function(a, b) { return b.today - a.today; });
-    }
+      // 根据当前时间计算日内进度
+      var now = new Date();
+      var hour = now.getHours();
+      var minute = now.getMinutes();
+      var timeMin = hour * 60 + minute;
 
-    // Fluctuate emotion score (±3)
-    var delta = Math.floor((Math.random() - 0.5) * 6);
-    data.emotion.score = Math.min(100, Math.max(0, data.emotion.score + delta));
-    data.emotion.timeline[2] = data.emotion.score;
-    data.emotion.summary = '今日市场情绪综合得分' + data.emotion.score + '分（满分100）。' +
-      (data.emotion.score > 70 ? '情绪高涨，赚钱效应明显。' :
-      data.emotion.score > 50 ? '情绪中性偏强，结构性机会存在。' :
-      data.emotion.score > 30 ? '情绪偏弱，操作难度较大。' :
-      '情绪低迷，建议谨慎观望。');
+      var progress = 0;
+      if (timeMin < 570) { progress = 0.1; }                    // 9:30前
+      else if (timeMin < 690) { progress = 0.1 + (timeMin - 570) / 120 * 0.5; } // 上午盘
+      else if (timeMin < 780) { progress = 0.6; }               // 午休
+      else if (timeMin < 900) { progress = 0.6 + (timeMin - 780) / 120 * 0.4; } // 下午盘
+      else { progress = 1; }                                    // 收盘后
+      progress = Math.min(1, Math.max(0.1, progress));
 
-    // Fluctuate limit-up stocks' seal time slightly (±2 min)
-    var fluctTime = function(timeStr, minutes) {
-      var parts = timeStr.split(':');
-      var h = parseInt(parts[0]);
-      var m = parseInt(parts[1]) + Math.floor((Math.random() - 0.5) * minutes * 2);
-      if (m < 0) { m = 0; }
-      if (m >= 60) { m = 59; }
-      return (h < 10 ? '0' + h : h) + ':' + (m < 10 ? '0' + m : m);
-    };
-    if (data.tenOclock.limitUpStocks) {
-      data.tenOclock.limitUpStocks.forEach(function(s) {
-        s.sealTime = fluctTime(s.sealTime, 2);
-      });
-      data.tenOclock.limitUpStocks.sort(function(a, b) { return a.sealTime.localeCompare(b.sealTime); });
-    }
-    if (data.noon.limitUpStocks) {
-      data.noon.limitUpStocks.forEach(function(s) {
-        s.sealTime = fluctTime(s.sealTime, 3);
-      });
-      data.noon.limitUpStocks.sort(function(a, b) { return a.sealTime.localeCompare(b.sealTime); });
-    }
-    if (data.close.limitUpStocks) {
-      data.close.limitUpStocks.forEach(function(s) {
-        s.sealTime = fluctTime(s.sealTime, 5);
-      });
-      data.close.limitUpStocks.sort(function(a, b) { return a.sealTime.localeCompare(b.sealTime); });
-    }
+      // 10点时段 ≈ 当前涨停数按时间进度的比例
+      var tenRatio = Math.min(0.35, progress * 0.6);
+      data.tenOclock.limitUp = Math.max(2, Math.floor(limitUpCount * tenRatio));
+      data.tenOclock.limitDown = Math.max(1, Math.floor(limitDownCount * tenRatio * 0.5));
 
-    // Update summary mood
-    data.summary.mood = data.emotion.score > 60 ? '偏强' : (data.emotion.score > 40 ? '中性' : '偏弱');
-    var limitRatio = data.close.limitUp / Math.max(1, data.close.limitDown);
-    data.summary.profit = limitRatio > 3 ? '良好' : (limitRatio > 1 ? '一般' : '较差');
+      // 午盘时段 ≈ 70%
+      var noonRatio = Math.min(0.7, progress * 0.9);
+      data.noon.limitUp = Math.max(3, Math.floor(limitUpCount * noonRatio));
+      data.noon.limitDown = Math.max(1, Math.floor(limitDownCount * noonRatio * 0.6));
+
+      // 更新热门板块
+      if (live.industrySectors && live.industrySectors.length > 0) {
+        var topSectors = live.industrySectors.slice(0, 8).map(function(s) {
+          return { name: s.name, today: s.change, streakDays: s.change > 2 ? 2 : 1 };
+        });
+        data.tenOclock.hotboards = topSectors.slice(0, 5).map(function(s) {
+          return { name: s.name, today: parseFloat((s.today * tenRatio / Math.max(0.2, progress)).toFixed(2)), streakDays: s.streakDays };
+        });
+        data.noon.hotboards = topSectors.slice(0, 6).map(function(s) {
+          return { name: s.name, today: parseFloat((s.today * noonRatio / Math.max(0.4, progress)).toFixed(2)), streakDays: s.streakDays };
+        });
+        data.close.hotboards = topSectors.slice(0, 6);
+      }
+
+      // --- 更新涨停股池（从实时涨停数据按封板时间分配） ---
+      if (live.limitUpPool && live.limitUpPool.length > 0) {
+        var tenStocks = [];
+        var noonStocks = [];
+
+        live.limitUpPool.slice(0, 30).forEach(function(s) {
+          var item = {
+            name: s.name,
+            sector: s.sector || '',
+            zhangfu: s.change,
+            lianban: s.lianban || 1,
+            sealTime: s.firstTime || '09:30'
+          };
+          if (s.firstTime && s.firstTime <= '10:00') {
+            tenStocks.push(item);
+          }
+          if (s.firstTime && s.firstTime <= '11:30') {
+            noonStocks.push(item);
+          }
+        });
+
+        if (tenStocks.length > 0) {
+          data.tenOclock.limitUpStocks = tenStocks.sort(function(a, b) {
+            return (a.sealTime || '').localeCompare(b.sealTime || '');
+          });
+        }
+        if (noonStocks.length > 0) {
+          data.noon.limitUpStocks = noonStocks.sort(function(a, b) {
+            return (a.sealTime || '').localeCompare(b.sealTime || '');
+          });
+        }
+        // 收盘全部涨停股
+        data.close.limitUpStocks = live.limitUpPool.slice(0, 20).map(function(s) {
+          return {
+            name: s.name,
+            sector: s.sector || '',
+            zhangfu: s.change,
+            lianban: s.lianban || 1,
+            sealTime: s.firstTime || '09:30'
+          };
+        }).sort(function(a, b) {
+          return (a.sealTime || '').localeCompare(b.sealTime || '');
+        });
+      }
+
+      // --- 计算情绪得分 ---
+      var limitRatio = limitUpCount / Math.max(1, limitDownCount);
+      var upDownRatio = live.market.upCount / Math.max(1, live.market.downCount);
+      var avgSectorChange = 0;
+      if (sectors && sectors.length > 0) {
+        var sum = 0;
+        sectors.forEach(function(s) { sum += s.today; });
+        avgSectorChange = sum / sectors.length;
+      }
+      var maxBoard = 0;
+      if (live.limitUpPool && live.limitUpPool.length > 0) {
+        live.limitUpPool.forEach(function(s) {
+          if (s.lianban > maxBoard) maxBoard = s.lianban;
+        });
+      }
+
+      var emotionScore = 50
+        + Math.min(20, limitRatio * 5)
+        + Math.min(15, (upDownRatio - 1) * 15)
+        + Math.min(10, avgSectorChange * 3)
+        + Math.min(15, maxBoard * 2);
+      emotionScore = Math.min(100, Math.max(0, Math.round(emotionScore)));
+
+      data.emotion.score = emotionScore;
+      data.emotion.timeline = [
+        Math.max(20, emotionScore - 15),
+        Math.max(30, emotionScore - 8),
+        emotionScore
+      ];
+      data.emotion.summary = '今日市场情绪综合得分' + emotionScore + '分（满分100）。' +
+        (emotionScore > 75 ? '情绪高涨，赚钱效应明显，连板梯队完整。' :
+         emotionScore > 55 ? '情绪中性偏强，结构性机会存在，关注前排龙头。' :
+         emotionScore > 35 ? '情绪偏弱，操作难度较大，注意控制仓位。' :
+         '情绪低迷，建议谨慎观望，等待情绪修复。');
+
+      // 摘要更新
+      data.summary.mood = emotionScore > 60 ? '偏强' : (emotionScore > 40 ? '中性' : '偏弱');
+      data.summary.profit = emotionScore > 70 ? '良好' : (emotionScore > 45 ? '一般' : '较差');
+
+      if (sectors && sectors.length > 0) {
+        var sortedSec = sectors.slice().sort(function(a, b) { return b.today - a.today; });
+        if (sortedSec[0]) data.summary.direction = sortedSec[0].name + '领涨';
+        if (sortedSec[sortedSec.length - 1]) {
+          data.summary.risk = sortedSec[sortedSec.length - 1].name + '风险较大';
+        }
+      }
+
+      // 各时段笔记
+      var tenScore = Math.max(20, emotionScore - 20);
+      data.tenOclock.note = '开盘半小时市场情绪' + (tenScore > 60 ? '偏强' : '偏弱') +
+        '，涨停' + data.tenOclock.limitUp + '家，' +
+        (data.tenOclock.hotboards && data.tenOclock.hotboards[0] ? data.tenOclock.hotboards[0].name + '领涨' : '');
+
+      var noonScore = Math.max(30, emotionScore - 10);
+      data.noon.note = '午盘市场情绪' + (noonScore > 60 ? '偏强' : '偏弱') +
+        '，涨停' + data.noon.limitUp + '家，' +
+        (data.noon.hotboards && data.noon.hotboards[0] ? data.noon.hotboards[0].name + '领涨' : '');
+
+      // 量能
+      data.close.volume = limitUpCount > 50 ? '放量' : (limitUpCount > 30 ? '正常' : '缩量');
+      data.tenOclock.volume = limitUpCount > 30 ? '放量' : '正常';
+      data.noon.volume = limitUpCount > 40 ? '放量' : '正常';
+
+      // 对比
+      data.close.vsOpen = limitUpCount > 40 ? '强于开盘' : (limitUpCount > 20 ? '持平' : '弱于开盘');
+      data.close.vsPrev = emotionScore > 60 ? '强于昨日' : (emotionScore > 40 ? '持平' : '弱于昨日');
+      data.sh.vsYday = emotionScore > 60 ? '转强' : (emotionScore > 40 ? '持平' : '转弱');
+      data.sh.vsYdayClass = emotionScore > 60 ? 'stronger' : (emotionScore > 40 ? 'flat' : 'weaker');
+    }
 
     // 持久化到数据库
     if (MarketDB && MarketDB.updateDay) {
